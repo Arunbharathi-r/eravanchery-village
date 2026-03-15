@@ -763,7 +763,7 @@ footer strong{color:#ffd96b;}
       <div style="font-size:.82rem;color:#444;line-height:2;">
         <div>📞 <a href="tel:+918608287793" style="color:#1565c0;font-weight:600;text-decoration:none;">+91 8608287793</a></div>
         <div>💬 <a href="https://wa.me/918608287793?text=வணக்கம்! 54 எரவாஞ்சேரி கிராம இணையதளம் வழியாக தொடர்பு கொள்கிறேன்." target="_blank" style="color:#25D366;font-weight:600;text-decoration:none;">WhatsApp: 8608287793</a></div>
-        <div>✉️ <strong>aruncse34@gmail.com</strong></div>
+        <div>✉️ <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4c2d3e39222f3f297f780c2b212d2520622f2321">[email&#160;protected]</a></strong></div>
         <div style="font-size:.75rem;color:var(--mu);margin-top:.3rem;">கோரிக்கைகளுக்கு 24-48 மணி நேரத்தில் பதில் வரும்.</div>
       </div>
     </div>
@@ -941,7 +941,7 @@ footer strong{color:#ffd96b;}
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ══ CONFIG ══
 const FORMSPREE_ID = 'xeerlkyp';
 const ADMIN_EMAIL  = 'aruncse34@gmail.com';
@@ -1559,7 +1559,7 @@ window.adminEditLeader = function(id) {
   loadLeaderEdit();
   show('admin');
   document.getElementById('adminLocked').style.display = 'none';
-  document.getElementById('adminUnlocked').style.display = 'block';
+  document.get  document.getElementById('adminUnlocked').style.display = 'block';
 }
 
 window.closeModal = function(id) { document.getElementById(id).classList.remove('show'); }
@@ -1567,6 +1567,26 @@ window.closeModal = function(id) { document.getElementById(id).classList.remove(
 // ══ INIT ══
 checkAutoLogin();
 updateBadge();
+</script>
+
+<!-- Netlify Identity Widget — handles recovery/invite tokens -->
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script>
+if (window.netlifyIdentity) {
+  window.netlifyIdentity.on('init', user => {
+    if (!user) {
+      window.netlifyIdentity.on('login', () => {
+        document.location.href = '/admin/';
+      });
+    }
+  });
+}
+// Handle recovery token — redirect to admin
+if (window.location.hash.includes('recovery_token') ||
+    window.location.hash.includes('invite_token') ||
+    window.location.hash.includes('confirmation_token')) {
+  window.location.href = '/admin/' + window.location.hash;
+}
 </script>
 </body>
 </html>
