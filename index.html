@@ -221,7 +221,7 @@ body{font-family:'Noto Sans Tamil',sans-serif;background:var(--cream);color:var(
 .bnav button .bi{font-size:17px;line-height:1;}
 .bnav button.active{color:var(--g);}
 
-section{display:none;padding-bottom:74px;}
+section{display:block;padding-bottom:1rem;}
 section.active{display:block;}
 
 /* ── HERO ── */
@@ -384,12 +384,23 @@ footer strong{color:#ffd96b;}
 .femerg{display:flex;justify-content:center;gap:1rem;margin-top:.5rem;flex-wrap:wrap;}
 .femerg span{font-size:.68rem;background:rgba(255,255,255,.1);padding:.2rem .6rem;border-radius:99px;}
 
+/* ── SCROLL SPY ── */
+html{scroll-behavior:smooth;}
+section{scroll-margin-top:96px;}
+.sec-anchor{position:relative;}
+.sticky-sec-hd{position:sticky;top:56px;z-index:100;background:#fff;padding:.5rem 1rem;border-bottom:2px solid var(--gl);display:flex;align-items:center;gap:.5rem;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.sticky-sec-hd .ssh-icon{font-size:1.1rem;}
+.sticky-sec-hd .ssh-title{font-size:.88rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;}
+.sec-divider{height:8px;background:var(--gl);margin:0;}
+.bnav button.active{color:var(--g);font-weight:700;}
+.bnav button.active .bi{transform:scale(1.15);}
+
 /* ── LOADING ── */
 .loading{text-align:center;padding:2rem;color:var(--mu);font-size:.85rem;font-family:'Noto Serif Tamil',serif;}
 
 /* ── FLOATING BUTTONS ── */
 .float-btns{position:fixed;bottom:85px;right:16px;display:flex;flex-direction:column;gap:10px;z-index:199;}
-.float-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:transform .2s;     background: green;}
+.float-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:transform .2s;}
 .float-btn:hover{transform:scale(1.12);}
 .float-call{background:#1a6b3c;}
 .float-label{position:absolute;right:60px;background:rgba(0,0,0,.72);color:#fff;padding:.25rem .65rem;border-radius:6px;font-size:.7rem;white-space:nowrap;font-family:'Noto Serif Tamil',serif;pointer-events:none;opacity:0;transition:opacity .2s;}
@@ -455,6 +466,7 @@ footer strong{color:#ffd96b;}
       <button class="btn-g" onclick="sendOTP()">OTP அனுப்பு 📲</button>
       <hr style="border:none;border-top:1px solid #f0f0f0;margin:.5rem 0;">
       <button class="btn-out" onclick="guestLogin()">👥 விருந்தினராக தொடரவும்</button>
+      <button onclick="showHowto()" style="width:100%;background:none;border:none;color:rgba(0,0,0,.7);font-size:.8rem;cursor:pointer;font-family:'Noto Serif Tamil',serif;margin-top:.65rem;text-decoration:underline;">❓ எப்படி பயன்படுத்துவது?</button>
     </div>
     <!-- Step 2: OTP -->
     <div class="lstep" id="lstep2">
@@ -490,7 +502,60 @@ footer strong{color:#ffd96b;}
 </div>
 </div>
 
-<!-- ════ MAIN APP ════ -->
+<!-- ════ HOW TO USE POPUP ════ -->
+<div id="howtoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;overflow-y:auto;padding:1rem;">
+  <div style="background:#fff;border-radius:20px;max-width:400px;margin:0 auto;overflow:hidden;">
+    <div style="background:linear-gradient(90deg,#1a6b3c,#2d9e5a);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;">
+      <span style="color:#ffd96b;font-size:.95rem;font-weight:700;font-family:'Noto Serif Tamil',serif;">❓ எப்படி பயன்படுத்துவது?</span>
+      <button onclick="document.getElementById('howtoModal').style.display='none'" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="padding:1.25rem;">
+
+      <!-- Step 1 -->
+      <div style="display:flex;gap:.85rem;margin-bottom:1rem;align-items:flex-start;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#1a6b3c;color:#fff;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+        <div>
+          <div style="font-size:.88rem;font-weight:700;color:#1a1a1a;font-family:'Noto Serif Tamil',serif;margin-bottom:.25rem;">Login செய்யுங்கள்</div>
+          <div style="font-size:.78rem;color:#555;line-height:1.7;">Mobile number போடுங்கள் → OTP உள்ளிடுங்கள் → உள்ளே செல்லுங்கள். விருந்தினராக பார்க்கவும் செய்யலாம்.</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="display:flex;gap:.85rem;margin-bottom:1rem;align-items:flex-start;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#1a6b3c;color:#fff;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+        <div>
+          <div style="font-size:.88rem;font-weight:700;color:#1a1a1a;font-family:'Noto Serif Tamil',serif;margin-bottom:.25rem;">தகவல்கள் பாருங்கள்</div>
+          <div style="font-size:.78rem;color:#555;line-height:1.7;">
+            <span style="background:#e8f5ee;color:#1a6b3c;border-radius:4px;padding:.1rem .35rem;font-size:.7rem;font-weight:600;">📢 அறிவிப்புகள்</span> கிராம செய்திகள்<br>
+            <span style="background:#e8f0fb;color:#1565c0;border-radius:4px;padding:.1rem .35rem;font-size:.7rem;font-weight:600;">🏛️ அரசு அதிகாரிகள்</span> VAO · தாசில்தார்<br>
+            <span style="background:#fde8e8;color:#c0392b;border-radius:4px;padding:.1rem .35rem;font-size:.7rem;font-weight:600;">🏥 மருத்துவம்</span> PHC · அவசர எண்கள்<br>
+            <span style="background:var(--gol);color:#c8870a;border-radius:4px;padding:.1rem .35rem;font-size:.7rem;font-weight:600;">🏗️ வசதிகள்</span> குடிநீர் · மின் புகார்
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="display:flex;gap:.85rem;margin-bottom:1rem;align-items:flex-start;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#1a6b3c;color:#fff;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+        <div>
+          <div style="font-size:.88rem;font-weight:700;color:#1a1a1a;font-family:'Noto Serif Tamil',serif;margin-bottom:.25rem;">கோரிக்கை அனுப்புங்கள்</div>
+          <div style="font-size:.78rem;color:#555;line-height:1.7;">தொடர்பு பக்கம் → பெயர் + செய்தி → Submit → நிர்வாகிக்கு உடனே email போகும்</div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div style="display:flex;gap:.85rem;margin-bottom:1.25rem;align-items:flex-start;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#1a6b3c;color:#fff;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+        <div>
+          <div style="font-size:.88rem;font-weight:700;color:#1a1a1a;font-family:'Noto Serif Tamil',serif;margin-bottom:.25rem;">WhatsApp Group சேரும்</div>
+          <div style="font-size:.78rem;color:#555;line-height:1.7;">முகப்பு பக்கம் → WhatsApp Group சேர button → கிராம அறிவிப்புகள் உடனே வரும்</div>
+        </div>
+      </div>
+
+      <button onclick="document.getElementById('howtoModal').style.display='none'" style="width:100%;background:#1a6b3c;color:#fff;border:none;border-radius:12px;padding:.8rem;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Noto Serif Tamil',serif;">✅ புரிந்தது! தொடரவும்</button>
+    </div>
+  </div>
+</div>
 <div id="appMain" style="display:none;">
 
 <div class="topbar">
@@ -503,7 +568,7 @@ footer strong{color:#ffd96b;}
     <button onclick="show('home',this)">🏠 முகப்பு</button>
     <button onclick="show('news',this)">📢 அறிவிப்புகள்</button>
     <button onclick="show('hospital',this)">🏥 மருத்துவம்</button>
-    <button onclick="show('collector',this)">🏛️ கலெக்டர்</button>
+    <button onclick="show('collector',this)">🏛️ அரசு அதிகாரிகள்</button>
     <button onclick="show('facilities',this)">🏗️ வசதிகள்</button>
     <button onclick="show('gallery',this)">🖼 படங்கள்</button>
     <button onclick="show('contact',this)">📩 தொடர்பு</button>
@@ -517,9 +582,11 @@ footer strong{color:#ffd96b;}
 <div class="mbar">
   <div class="mlbl">📢 சமீபத்திய செய்தி</div>
   <div class="mtrack"><div class="mcontent" id="marqueeContent">
-    <span class="mitem">54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை – 26.01.2026 கிராம சபை தீர்மானம் நிறைவேற்றப்பட்டது</span>
+    <span class="mitem">🆕 தோப்புத்தெரு சிமெண்ட் சாலை பணிகள் நிறுத்தம் — உடனடி நடவடிக்கை கோரிக்கை 15.03.2026</span>
+    <span class="mitem">54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை – 26.01.2026 கிராம சபை தீர்மானம்</span>
     <span class="mitem">அடுத்த கிராம சபை கூட்டம் விரைவில் – அனைத்து மக்களும் பங்கேற்கவும்</span>
-    <span class="mitem">54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை – 26.01.2026 கிராம சபை தீர்மானம் நிறைவேற்றப்பட்டது</span>
+    <span class="mitem">🆕 தோப்புத்தெரு சிமெண்ட் சாலை பணிகள் நிறுத்தம் — உடனடி நடவடிக்கை கோரிக்கை 15.03.2026</span>
+    <span class="mitem">54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை – 26.01.2026 கிராம சபை தீர்மானம்</span>
     <span class="mitem">அடுத்த கிராம சபை கூட்டம் விரைவில் – அனைத்து மக்களும் பங்கேற்கவும்</span>
   </div></div>
 </div>
@@ -536,7 +603,6 @@ footer strong{color:#ffd96b;}
     <button onclick="show('facilities',this);closeDrawer()"><span class="dicon">🏗️</span>வசதிகள் & புகார்</button>
     <button onclick="show('gallery',this);closeDrawer()"><span class="dicon">🖼</span>படங்கள்</button>
     <button onclick="show('contact',this);closeDrawer()"><span class="dicon">📩</span>தொடர்பு</button>
-    <button onclick="show('admin',this);closeDrawer()" class="dadmin" id="adminMenuBtn" style="display:none;"><span class="dicon">🔐</span>Admin Panel <span id="drawerCount" style="background:#e53935;color:#fff;border-radius:99px;padding:0 5px;font-size:.65rem;margin-left:4px;display:none;">0</span></button>
   </div>
 </div>
 
@@ -567,6 +633,7 @@ footer strong{color:#ffd96b;}
           <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           <span style="color:#fff;font-weight:700;">📲 WhatsApp Group சேர</span>
         </a>
+
         <button onclick="show('contact')" style="display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);padding:.45rem 1rem;border-radius:99px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Noto Serif Tamil',serif;">
           📩 தொடர்பு கொள்ளுங்கள்
         </button>
@@ -649,6 +716,18 @@ footer strong{color:#ffd96b;}
       </div>
     </div>
 
+    <!-- சமீபத்திய கோரிக்கை -->
+    <div class="ucard" style="border:2px solid #e53935;">
+      <div class="uhead" style="background:linear-gradient(90deg,#c0392b,#e74c3c);"><div class="udot"></div><span>🆕 சமீபத்திய கோரிக்கை — 15.03.2026</span></div>
+      <div style="padding:1rem;">
+        <div style="display:inline-block;background:#fde8e8;color:#c0392b;border-radius:99px;padding:.18rem .65rem;font-size:.65rem;font-weight:700;margin-bottom:.45rem;border:1px solid #f5b8b8;">📋 கோரிக்கை சமர்பிக்கப்பட்டது</div>
+        <div style="font-size:.68rem;color:var(--mu);margin-bottom:.3rem;">📅 15.03.2026 — அருண்பாரதி R, மக்கள் பிரதிநிதி</div>
+        <div style="font-size:.92rem;font-weight:700;color:#c0392b;font-family:'Noto Serif Tamil',serif;line-height:1.5;margin-bottom:.4rem;">எரவாஞ்சேரி மெயின் ரோடு தோப்புத்தெரு சிமெண்ட் சாலை பணிகள் நிறைவு கோரிக்கை</div>
+        <div style="font-size:.8rem;color:#444;line-height:1.85;">மெயின் ரோடு தோப்புத்தெருவில் சிமெண்ட் சாலை பணிகள் பாதியில் நிறுத்தப்பட்டுள்ளன. பொதுமக்கள், பள்ளி மாணவர்கள், முதியவர்கள் கடும் சிரமம் அனுபவிக்கின்றனர். உடனடியாக பணிகள் நிறைவு செய்ய வேண்டும்.</div>
+        <button onclick="show('news')" style="margin-top:.6rem;background:#fde8e8;color:#c0392b;border:1px solid #f5b8b8;border-radius:8px;padding:.35rem .85rem;font-size:.72rem;cursor:pointer;font-family:'Noto Serif Tamil',serif;font-weight:600;">📢 முழு விவரம் பார்க்க →</button>
+      </div>
+    </div>
+
     <div class="ucard">
       <div class="uhead"><div class="udot"></div><span>சமீபத்திய கிராம சபை தீர்மானம்</span></div>
       <div style="padding:1rem;">
@@ -678,6 +757,8 @@ footer strong{color:#ffd96b;}
 
 <!-- ════ அறிவிப்புகள் ════ -->
 <section id="news">
+  <div class="sec-divider"></div>
+  <div class="sticky-sec-hd"><span class="ssh-icon">📢</span><span class="ssh-title">அறிவிப்புகள்</span></div>
   <div class="container">
     <div class="sec-hd">அறிவிப்புகள்</div>
     <div class="sec-sub">புதிய தகவல்கள்</div>
@@ -688,6 +769,8 @@ footer strong{color:#ffd96b;}
 
 <!-- ════ வரலாறு ════ -->
 <section id="history">
+  <div class="sec-divider"></div>
+  <div class="sticky-sec-hd"><span class="ssh-icon">📜</span><span class="ssh-title">கிராம வரலாறு</span></div>
   <div class="container">
     <div class="sec-hd">கிராம வரலாறு</div>
     <div class="sec-sub">நம் கிராமத்தின் பெருமை</div>
@@ -700,6 +783,8 @@ footer strong{color:#ffd96b;}
 
 <!-- ════ தலைவர்கள் ════ -->
 <section id="leaders">
+  <div class="sec-divider"></div>
+  <div class="sticky-sec-hd"><span class="ssh-icon">👤</span><span class="ssh-title">தலைவர்கள்</span></div>
   <div class="container">
     <div class="sec-hd">கிராம தலைவர்கள்</div>
     <div class="sec-sub">தொடர்பு தகவல்கள்</div>
@@ -716,10 +801,121 @@ footer strong{color:#ffd96b;}
 
 <!-- ════ கலெக்டர் ════ -->
 <section id="collector">
+  <div class="sec-divider"></div>
+  <div class="sticky-sec-hd"><span class="ssh-icon">🏛️</span><span class="ssh-title">அரசு அதிகாரிகள் தொடர்பு</span></div>
   <div class="container">
-    <div class="sec-hd">மாவட்ட கலெக்டர்</div>
-    <div class="sec-sub">மயிலாடுதுறை மாவட்டம்</div>
+    <div class="sec-hd">அரசு அதிகாரிகள் தொடர்பு</div>
+    <div class="sec-sub">VAO · தாசில்தார் · கலெக்டர் · அனைத்தும்</div>
     <div class="divider"></div>
+
+    <!-- Quick contact grid -->
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem;margin-bottom:1.1rem;">
+      <div style="background:#e8f5ee;border-radius:12px;padding:.75rem;text-align:center;border:1px solid #b8d4c8;">
+        <div style="font-size:1.3rem;margin-bottom:.25rem;">🌾</div>
+        <div style="font-size:.72rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;">VAO</div>
+        <div style="font-size:.65rem;color:var(--mu);">கிராம நிர்வாக அலுவலர்</div>
+      </div>
+      <div style="background:#e8f0fb;border-radius:12px;padding:.75rem;text-align:center;border:1px solid #b5d4f4;">
+        <div style="font-size:1.3rem;margin-bottom:.25rem;">🏢</div>
+        <div style="font-size:.72rem;font-weight:700;color:#1565c0;font-family:'Noto Serif Tamil',serif;">தாசில்தார்</div>
+        <div style="font-size:.65rem;color:var(--mu);">தரங்கம்பாடி வட்டம்</div>
+      </div>
+      <div style="background:var(--gol);border-radius:12px;padding:.75rem;text-align:center;border:1px solid #f0dfa0;">
+        <div style="font-size:1.3rem;margin-bottom:.25rem;">📋</div>
+        <div style="font-size:.72rem;font-weight:700;color:var(--gold);font-family:'Noto Serif Tamil',serif;">கிளார்க்</div>
+        <div style="font-size:.65rem;color:var(--mu);">வட்டாட்சியர் அலுவலகம்</div>
+      </div>
+      <div style="background:#fde8e8;border-radius:12px;padding:.75rem;text-align:center;border:1px solid #f5b8b8;">
+        <div style="font-size:1.3rem;margin-bottom:.25rem;">🏛️</div>
+        <div style="font-size:.72rem;font-weight:700;color:var(--re);font-family:'Noto Serif Tamil',serif;">கலெக்டர்</div>
+        <div style="font-size:.65rem;color:var(--mu);">மயிலாடுதுறை மாவட்டம்</div>
+      </div>
+    </div>
+
+    <!-- VAO -->
+    <div class="card" style="border-left:4px solid var(--gm);margin-bottom:.85rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--gl);border:2px solid #b8d4c8;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">🌾</div>
+        <div>
+          <div style="font-size:.92rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;">VAO — கிராம நிர்வாக அலுவலர்</div>
+          <div style="font-size:.7rem;color:var(--mu);">54 எரவாஞ்சேரி கிராமம்</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">பெயர்</span>
+          <span style="font-size:.82rem;font-weight:600;font-family:'Noto Serif Tamil',serif;">பெயர் சேர்க்கவும்</span>
+        </div>
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">📞 தொலைபேசி</span>
+          <span style="font-size:.82rem;color:var(--bl);">+91 XXXXX XXXXX</span>
+        </div>
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">🕐 நேரம்</span>
+          <span style="font-size:.82rem;">திங்கள் – வெள்ளி, காலை 10 – மாலை 5</span>
+        </div>
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">📋 பணிகள்</span>
+          <span style="font-size:.78rem;color:#555;line-height:1.7;">சான்றிதழ்கள், நில ஆவணங்கள், வருமான சான்று, சாதி சான்று, வாக்காளர் பட்டியல்</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- தாசில்தார் -->
+    <div class="card" style="border-left:4px solid #1565c0;margin-bottom:.85rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+        <div style="width:44px;height:44px;border-radius:50%;background:#e8f0fb;border:2px solid #b5d4f4;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">🏢</div>
+        <div>
+          <div style="font-size:.92rem;font-weight:700;color:#1565c0;font-family:'Noto Serif Tamil',serif;">தாசில்தார் அலுவலகம்</div>
+          <div style="font-size:.7rem;color:var(--mu);">தரங்கம்பாடி வட்டம்</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">பெயர்</span>
+          <span style="font-size:.82rem;font-weight:600;font-family:'Noto Serif Tamil',serif;">பெயர் சேர்க்கவும்</span>
+        </div>
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">📞 தொலைபேசி</span>
+          <span style="font-size:.82rem;color:var(--bl);">04364 - XXXXXX</span>
+        </div>
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">📍 முகவரி</span>
+          <span style="font-size:.82rem;">வட்டாட்சியர் அலுவலகம், தரங்கம்பாடி</span>
+        </div>
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">📋 பணிகள்</span>
+          <span style="font-size:.78rem;color:#555;line-height:1.7;">நில பட்டா, சிட்டா, அடங்கல், நில மாறுதல், பிறப்பு/இறப்பு சான்று, கல்வி உதவித்தொகை</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- கிளார்க் -->
+    <div class="card" style="border-left:4px solid var(--gold);margin-bottom:.85rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--gol);border:2px solid #f0dfa0;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">📋</div>
+        <div>
+          <div style="font-size:.92rem;font-weight:700;color:var(--gold);font-family:'Noto Serif Tamil',serif;">வட்டாட்சியர் கிளார்க்</div>
+          <div style="font-size:.7rem;color:var(--mu);">தரங்கம்பாடி வட்டம்</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">பெயர்</span>
+          <span style="font-size:.82rem;font-weight:600;font-family:'Noto Serif Tamil',serif;">பெயர் சேர்க்கவும்</span>
+        </div>
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">📞 தொலைபேசி</span>
+          <span style="font-size:.82rem;color:var(--bl);">04364 - XXXXXX</span>
+        </div>
+        <div style="display:flex;gap:.65rem;padding:.45rem 0;">
+          <span style="font-size:.7rem;color:var(--mu);min-width:70px;font-weight:600;">📋 பணிகள்</span>
+          <span style="font-size:.78rem;color:#555;line-height:1.7;">விண்ணப்பங்கள் பெறுதல், கோப்பு பதிவு, சான்றிதழ் வழங்கல், அரசு திட்ட பதிவு</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- மாவட்ட கலெக்டர் -->
     <div class="colcard">
       <div class="colhead">
         <div class="colphoto">👤</div>
@@ -729,15 +925,49 @@ footer strong{color:#ffd96b;}
       </div>
       <div class="colbody">
         <div class="crow"><div class="cicon" style="background:var(--gl);">📞</div><div><span style="font-size:.68rem;color:var(--mu);display:block;">தொலைபேசி</span><span style="font-size:.85rem;font-weight:500;color:var(--bl);">04364 - XXXXXX</span></div></div>
-        <div class="crow"><div class="cicon" style="background:#e8f0fb;">✉️</div><div><span style="font-size:.68rem;color:var(--mu);display:block;">மின்னஞ்சல்</span><span style="font-size:.82rem;font-weight:500;color:var(--bl);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8eede1e2e2ebedfae1fca0e3f7e2efeafbfae6fbfcefe7cefae0a0e9e1f8a0e7e0">[email&#160;protected]</a></span></div></div>
+        <div class="crow"><div class="cicon" style="background:#e8f0fb;">✉️</div><div><span style="font-size:.68rem;color:var(--mu);display:block;">மின்னஞ்சல்</span><span style="font-size:.82rem;font-weight:500;color:var(--bl);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="afccc0c3c3caccdbc0dd81c2d6c3cecbdadbc7daddcec6efdbc181c8c0d981c6c1">[email&#160;protected]</a></span></div></div>
         <div class="crow"><div class="cicon" style="background:var(--gol);">🏛️</div><div><span style="font-size:.68rem;color:var(--mu);display:block;">அலுவலகம்</span><span style="font-size:.82rem;font-weight:500;">மாவட்ட ஆட்சியர் அலுவலகம், மயிலாடுதுறை</span></div></div>
       </div>
     </div>
+
+    <!-- அனைத்து கிராமங்கள் தொடர்பு -->
+    <div style="background:var(--g);border-radius:14px;padding:1rem;margin-top:.85rem;">
+      <div style="font-size:.85rem;font-weight:700;color:#ffd96b;font-family:'Noto Serif Tamil',serif;margin-bottom:.75rem;">📞 முக்கிய அரசு தொடர்பு எண்கள்</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.55rem .65rem;">
+          <div style="font-size:.62rem;color:rgba(255,255,255,.65);">🌾 VAO அலுவலகம்</div>
+          <div style="font-size:.82rem;font-weight:700;color:#ffd96b;">+91 XXXXX XXXXX</div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.55rem .65rem;">
+          <div style="font-size:.62rem;color:rgba(255,255,255,.65);">🏢 தாசில்தார் அலுவலகம்</div>
+          <div style="font-size:.82rem;font-weight:700;color:#ffd96b;">04364 - XXXXXX</div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.55rem .65rem;">
+          <div style="font-size:.62rem;color:rgba(255,255,255,.65);">🏛️ கலெக்டர் அலுவலகம்</div>
+          <div style="font-size:.82rem;font-weight:700;color:#ffd96b;">04364 - XXXXXX</div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.55rem .65rem;">
+          <div style="font-size:.62rem;color:rgba(255,255,255,.65);">📞 CM Helpline</div>
+          <div style="font-size:.82rem;font-weight:700;color:#ffd96b;">1100</div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.55rem .65rem;">
+          <div style="font-size:.62rem;color:rgba(255,255,255,.65);">🏥 மருத்துவ உதவி</div>
+          <div style="font-size:.82rem;font-weight:700;color:#ffd96b;">104</div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.55rem .65rem;">
+          <div style="font-size:.62rem;color:rgba(255,255,255,.65);">👩 மகளிர் உதவி</div>
+          <div style="font-size:.82rem;font-weight:700;color:#ffd96b;">181</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
 <!-- ════ மருத்துவமனை ════ -->
 <section id="hospital">
+  <div class="sec-divider"></div>
+  <div class="sticky-sec-hd"><span class="ssh-icon">🏥</span><span class="ssh-title">மருத்துவமனை</span></div>
   <div class="container">
     <div class="sec-hd">அருகில் உள்ள மருத்துவமனைகள்</div>
     <div class="sec-sub">அவசர சிகிச்சை தகவல்கள்</div>
@@ -767,6 +997,8 @@ footer strong{color:#ffd96b;}
 
 <!-- ════ வசதிகள் ════ -->
 <section id="facilities">
+  <div class="sec-divider"></div>
+  <div class="sticky-sec-hd"><span class="ssh-icon">🏗️</span><span class="ssh-title">வசதிகள் & புகார்</span></div>
   <div class="container">
     <div class="sec-hd">கிராம வசதிகள் & புகார் தொடர்பு</div>
     <div class="sec-sub">தற்போதைய நிலை</div>
@@ -817,6 +1049,8 @@ footer strong{color:#ffd96b;}
 
 <!-- ════ படங்கள் ════ -->
 <section id="gallery">
+  <div class="sec-divider"></div>
+  <div class="sticky-sec-hd"><span class="ssh-icon">🖼</span><span class="ssh-title">படங்கள்</span></div>
   <div class="container">
     <div class="sec-hd">படங்கள்</div>
     <div class="sec-sub">கிராம படத்தொகுப்பு</div>
@@ -828,6 +1062,8 @@ footer strong{color:#ffd96b;}
 
 <!-- ════ தொடர்பு ════ -->
 <section id="contact">
+  <div class="sec-divider"></div>
+  <div class="sticky-sec-hd"><span class="ssh-icon">📩</span><span class="ssh-title">தொடர்பு</span></div>
   <div class="container">
     <div class="sec-hd">தொடர்பு கொள்ளுங்கள்</div>
     <div class="sec-sub">கோரிக்கை அனுப்புங்கள்</div>
@@ -861,146 +1097,6 @@ footer strong{color:#ffd96b;}
   </div>
 </section>
 
-<!-- ════ ADMIN PANEL ════ -->
-<section id="admin">
-  <div class="container">
-    <div class="sec-hd">Admin Panel</div>
-    <div class="sec-sub">நிர்வாக பலகை</div>
-    <div class="divider"></div>
-
-    <div id="adminLocked">
-      <div style="background:#fff;border-radius:14px;border:1px solid #e0e8e3;padding:1.5rem;text-align:center;margin-bottom:1rem;">
-        <div style="font-size:2.5rem;margin-bottom:.5rem;">🔐</div>
-        <div style="font-size:1rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;margin-bottom:.4rem;">PIN உள்ளிடுங்கள்</div>
-        <div class="pin-input">
-          <input type="password" maxlength="1" id="p1" oninput="np(this,'p2')" onkeydown="pk(event,this,null,'p2')">
-          <input type="password" maxlength="1" id="p2" oninput="np(this,'p3')" onkeydown="pk(event,this,'p1','p3')">
-          <input type="password" maxlength="1" id="p3" oninput="np(this,'p4')" onkeydown="pk(event,this,'p2','p4')">
-          <input type="password" maxlength="1" id="p4" oninput="cp()" onkeydown="pk(event,this,'p3',null)">
-        </div>
-        <div id="pinErr" style="font-size:.78rem;color:var(--re);display:none;font-family:'Noto Serif Tamil',serif;">PIN தவறானது.</div>
-        <div style="font-size:.72rem;color:var(--mu);margin-top:.5rem;">இயல்புநிலை PIN: 1234</div>
-      </div>
-    </div>
-
-    <div id="adminUnlocked" style="display:none;">
-      <div class="admin-badge">
-        <span>🟢 Admin mode — real-time update செய்யலாம்!</span>
-        <button onclick="adminLogout()" style="margin-left:auto;background:none;border:1px solid var(--gm);border-radius:6px;padding:.25rem .65rem;font-size:.72rem;cursor:pointer;color:var(--g);font-family:'Noto Sans Tamil',sans-serif;">வெளியேறு</button>
-      </div>
-
-      <!-- Marquee CMS -->
-      <div class="admin-sec">
-        <div class="admin-sec-head"><span>📢 Marquee ஓடும் செய்தி மாற்றவும்</span></div>
-        <div class="admin-sec-body">
-          <div id="marqueeEditList" style="margin-bottom:.75rem;"></div>
-          <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
-            <input type="text" id="newMarqueeText" placeholder="புதிய ஓடும் செய்தி உள்ளிடுங்கள்..." style="flex:1;border:1.5px solid #dde4e0;border-radius:8px;padding:.6rem .8rem;font-size:.83rem;font-family:'Noto Sans Tamil',sans-serif;outline:none;color:var(--tx);">
-            <button onclick="addMarqueeItem()" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:.6rem 1rem;font-size:.82rem;cursor:pointer;white-space:nowrap;font-family:'Noto Serif Tamil',serif;">+ சேர்</button>
-          </div>
-          <button class="sbtn" onclick="saveMarquee()">💾 Marquee சேமிக்கவும்</button>
-          <div id="marqueeSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ Marquee புதுப்பிக்கப்பட்டது!</div>
-        </div>
-      </div>
-
-      <!-- Add Announcement -->
-      <div class="admin-sec">
-        <div class="admin-sec-head"><span>📢 புதிய அறிவிப்பு சேர்க்கவும்</span></div>
-        <div class="admin-sec-body">
-          <div class="field"><label>தலைப்பு *</label><input type="text" id="annTitle" placeholder="அறிவிப்பு தலைப்பு"></div>
-          <div class="field"><label>விளக்கம் *</label><textarea id="annDesc" placeholder="விரிவான விளக்கம்..."></textarea></div>
-          <div class="field">
-            <label>வகை</label>
-            <select id="annType">
-              <option value="புதியது">📣 புதியது</option>
-              <option value="அறிவிப்பு">📢 அறிவிப்பு</option>
-              <option value="நிகழ்வு">🎉 நிகழ்வு</option>
-              <option value="அவசரம்">🚨 அவசரம்</option>
-            </select>
-          </div>
-          <button class="sbtn" onclick="addAnnouncement()">✅ அறிவிப்பு சேர்க்க</button>
-          <button onclick="addAndShareAnnouncement()" style="width:100%;background:#25D366;color:#fff;border:none;border-radius:10px;padding:.75rem;font-size:.9rem;font-weight:600;cursor:pointer;font-family:'Noto Serif Tamil',serif;margin-top:.5rem;">📲 சேர்த்து WhatsApp Group-ல் அனுப்பு</button>
-          <div id="annSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ அறிவிப்பு சேர்க்கப்பட்டது!</div>
-        </div>
-      </div>
-
-      <!-- Upload Image -->
-      <div class="admin-sec">
-        <div class="admin-sec-head"><span>📸 படம் upload செய்யவும்</span></div>
-        <div class="admin-sec-body">
-          <div class="field">
-            <label>படம் தேர்வு செய்யுங்கள் (Camera அல்லது Gallery)</label>
-            <input type="file" id="imgFile" accept="image/*" capture="environment" onchange="previewImg(this)">
-          </div>
-          <img id="imgPreview" class="img-preview">
-          <div class="field"><label>படத்தின் தலைப்பு *</label><input type="text" id="imgCaption" placeholder="உதா: கோயில் திருவிழா 2026"></div>
-          <button class="sbtn" onclick="uploadImage()" id="uploadBtn">📤 Gallery-ல் சேர்க்க</button>
-          <div id="uploadProgress" style="display:none;margin-top:.6rem;background:#e8f0fb;border-radius:8px;padding:.6rem;text-align:center;font-size:.82rem;color:var(--bl);font-family:'Noto Serif Tamil',serif;">⏳ Upload ஆகிறது...</div>
-          <div id="uploadSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ படம் gallery-ல் சேர்க்கப்பட்டது!</div>
-        </div>
-      </div>
-
-      <!-- Edit Leaders -->
-      <div class="admin-sec">
-        <div class="admin-sec-head"><span>👤 தலைவர் தகவல் மாற்றவும்</span></div>
-        <div class="admin-sec-body">
-          <div class="field">
-            <label>தலைவர் தேர்வு</label>
-            <select id="leaderSelect" onchange="loadLeaderEdit()">
-              <option value="">-- தேர்வு செய்யுங்கள் --</option>
-            </select>
-          </div>
-          <div id="leaderEditForm" style="display:none;">
-            <div class="field"><label>பெயர்</label><input type="text" id="leaderName" placeholder="தலைவர் பெயர்"></div>
-            <div class="field"><label>தொலைபேசி</label><input type="tel" id="leaderPhone" placeholder="+91 XXXXX XXXXX"></div>
-            <div class="field">
-              <label>புகைப்படம் (Camera)</label>
-              <input type="file" id="leaderPhoto" accept="image/*" capture="environment" onchange="previewLeaderPhoto(this)">
-            </div>
-            <img id="leaderPhotoPreview" class="img-preview">
-            <button class="sbtn" onclick="saveLeader()">💾 சேமிக்கவும்</button>
-            <div id="leaderSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ தலைவர் தகவல் புதுப்பிக்கப்பட்டது!</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Edit Facilities -->
-      <div class="admin-sec">
-        <div class="admin-sec-head"><span>🏗️ வசதி நிலை மாற்றவும்</span></div>
-        <div class="admin-sec-body">
-          <div id="facilityEditList"><div class="loading">ஏற்றுகிறது...</div></div>
-          <button class="sbtn" onclick="saveFacilities()" style="margin-top:.75rem;">💾 அனைத்தையும் சேமிக்கவும்</button>
-          <div id="facSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ வசதி நிலை புதுப்பிக்கப்பட்டது!</div>
-        </div>
-      </div>
-
-      <!-- Requests -->
-      <div class="admin-sec">
-        <div class="admin-sec-head"><span>📩 வரும் கோரிக்கைகள் <span id="adminReqCount" style="background:#e53935;color:#fff;border-radius:99px;padding:0 5px;font-size:.62rem;margin-left:4px;display:none;">0</span></span></div>
-        <div class="admin-sec-body">
-          <div id="reqList"><div class="no-req">📭 கோரிக்கைகள் இல்லை</div></div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ════ FLOATING BUTTONS ════ -->
-<div class="float-btns" id="floatBtns">
-  <div style="position:relative;">
-    <button class="float-btn float-wa" onclick="openGroup()" title="WhatsApp Group">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      <span class="float-label">கிராம Group</span>
-    </button>
-  </div>
-  <div style="position:relative;">
-    <button class="float-btn float-call" onclick="openCall()" title="அழைக்கவும்">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-      <span class="float-label">அழைக்கவும்</span>
-    </button>
-  </div>
-</div>
 
 <!-- ════ FOOTER ════ -->
 <footer>
@@ -1033,13 +1129,23 @@ footer strong{color:#ffd96b;}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ══ CONFIG ══
 const FORMSPREE_ID = 'xeerlkyp';
 const ADMIN_EMAIL  = 'aruncse34@gmail.com';
 const ADMIN_PHONE  = '+91 8608287793';
 const WHATSAPP_NUM    = '918608287793';
 const WA_GROUP_LINK   = 'https://chat.whatsapp.com/JrxMzgDYJVY41XfqbasWXT';
+const DEMO_VIDEO_URL  = 'YOUR_YOUTUBE_LINK'; // ✏️ YouTube link இங்கே போடுங்கள்
+
+// ── Demo Video ──
+window.openDemoVideo = function() {
+  if (DEMO_VIDEO_URL === 'YOUR_YOUTUBE_LINK') {
+    alert('Demo video விரைவில் வரும்! 🎬');
+    return;
+  }
+  window.open(DEMO_VIDEO_URL, '_blank');
+};
 
 // ── WhatsApp Group & Call ──
 window.openGroup = function() {
@@ -1109,6 +1215,10 @@ window.saveMarquee = function() {
   const s = document.getElementById('marqueeSuccess');
   s.style.display = 'block'; setTimeout(() => s.style.display = 'none', 3000);
 }
+
+window.showHowto = function() {
+  document.getElementById('howtoModal').style.display = 'block';
+};
 
 const ADMIN_MOBILE = '9999999999';
 const ADMIN_PIN = '1234';
@@ -1239,11 +1349,33 @@ window.checkAutoLogin = function() {
 }
 
 // ══ FALLBACK DATA (no Firebase) ══
-function loadFallbackData() {
-  window._announcements = [
-    { id: '1', title: '54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை', desc: 'கிராம சபை கூட்டத்தில் தீர்மானம் நிறைவேற்றப்பட்டது.', type: 'புதியது', time: Date.now() },
-    { id: '2', title: 'பிரதம மந்திரி கிசான் திட்டம் பதிவு', desc: 'தகுதியான விவசாயிகள் பதிவு செய்யலாம்.', type: 'அறிவிப்பு', time: Date.now() - 86400000 },
-  ];
+// ══ GitHub config ══
+const GITHUB_USER = 'Arunbharathi-r';
+const GITHUB_REPO = 'eravanchery-village';
+const GITHUB_BRANCH = 'main';
+const GITHUB_RAW = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
+const GITHUB_API = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents`;
+
+// ══ Load data from GitHub ══
+async function loadFallbackData() {
+  // Load gallery from GitHub
+  await loadGithubGallery();
+  await loadGithubAnnouncements();
+
+  // Default fallback data
+  if (!window._announcements.length) {
+    window._announcements = [
+      {
+        id: '0',
+        title: 'எரவாஞ்சேரி – மெயின் ரோடு தோப்புத்தெரு சிமெண்ட் சாலை பணிகள் நிறைவு கோரிக்கை',
+        desc: 'மயிலாடுதுறை மாவட்டம், தரங்கம்பாடி வட்டம், எரவாஞ்சேரி கிராமத்தில் மெயின் ரோடு தோப்புத்தெருவில் சிமெண்ட் சாலை அமைக்கும் பணிகள் பாதியில் நிறுத்தப்பட்டுள்ளன. இதனால் பொதுமக்கள், பள்ளி மாணவர்கள், முதியவர்கள் கடும் சிரமம் அனுபவிக்கின்றனர். பணிகளை உடனடியாக நிறைவு செய்ய வேண்டும் என கோரிக்கை விடுக்கப்பட்டுள்ளது.\n\n— அருண்பாரதி R, மக்கள் பிரதிநிதி | 15.03.2026',
+        type: 'கோரிக்கை',
+        time: Date.now()
+      },
+      { id: '1', title: '54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை', desc: 'கிராம சபை கூட்டத்தில் தீர்மானம் நிறைவேற்றப்பட்டது.', type: 'புதியது', time: Date.now() - 86400000 },
+      { id: '2', title: 'பிரதம மந்திரி கிசான் திட்டம் பதிவு', desc: 'தகுதியான விவசாயிகள் பதிவு செய்யலாம்.', type: 'அறிவிப்பு', time: Date.now() - 86400000 },
+    ];
+  }
   window._leaders = [
     { id: '1', role: 'கிராம தலைவர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 1 },
     { id: '2', role: 'வார்டு உறுப்பினர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 2 },
@@ -1259,11 +1391,87 @@ function loadFallbackData() {
     { id: '7', name: 'வங்கி / ATM', icon: '🏦', status: 'partial' },
     { id: '8', name: 'சாக்கடை', icon: '🚰', status: 'no' },
   ];
-  window._gallery = [];
   renderAnnouncements();
   renderLeaders();
   renderFacilities();
   renderGallery();
+}
+
+// ── Fetch gallery from GitHub _data/gallery folder ──
+async function loadGithubGallery() {
+  try {
+    const res = await fetch(`${GITHUB_API}/_data/gallery?ref=${GITHUB_BRANCH}`, {
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) { window._gallery = []; return; }
+    const files = await res.json();
+    const mdFiles = files.filter(f => f.name.endsWith('.md') || f.name.endsWith('.json'));
+    const items = [];
+    for (const file of mdFiles) {
+      try {
+        const r = await fetch(file.download_url);
+        const text = await r.text();
+        // Parse frontmatter
+        const titleMatch = text.match(/title:\s*["']?(.+?)["']?\s*\n/);
+        const imageMatch = text.match(/image:\s*["']?(.+?)["']?\s*\n/);
+        const captionMatch = text.match(/caption:\s*["']?(.+?)["']?\s*\n/);
+        if (imageMatch) {
+          let imgUrl = imageMatch[1].trim();
+          // Convert relative path to full GitHub raw URL
+          if (!imgUrl.startsWith('http')) {
+            imgUrl = `${GITHUB_RAW}/${imgUrl.replace(/^\//, '')}`;
+          }
+          items.push({
+            id: file.name,
+            url: imgUrl,
+            caption: captionMatch ? captionMatch[1].trim() : (titleMatch ? titleMatch[1].trim() : ''),
+            time: Date.now()
+          });
+        }
+      } catch(e) {}
+    }
+    window._gallery = items;
+    console.log(`Gallery: ${items.length} images loaded from GitHub`);
+  } catch(e) {
+    console.warn('Gallery fetch error:', e);
+    window._gallery = [];
+  }
+}
+
+// ── Fetch announcements from GitHub _data/announcements folder ──
+async function loadGithubAnnouncements() {
+  try {
+    const res = await fetch(`${GITHUB_API}/_data/announcements?ref=${GITHUB_BRANCH}`, {
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) { window._announcements = []; return; }
+    const files = await res.json();
+    const mdFiles = files.filter(f => f.name.endsWith('.md'));
+    const items = [];
+    for (const file of mdFiles) {
+      try {
+        const r = await fetch(file.download_url);
+        const text = await r.text();
+        const titleMatch = text.match(/title:\s*["']?(.+?)["']?\s*\n/);
+        const typeMatch  = text.match(/type:\s*["']?(.+?)["']?\s*\n/);
+        const bodyMatch  = text.match(/---[\s\S]*?---\s*([\s\S]*)/);
+        if (titleMatch) {
+          items.unshift({
+            id: file.name,
+            title: titleMatch[1].trim(),
+            desc: bodyMatch ? bodyMatch[1].trim() : '',
+            type: typeMatch ? typeMatch[1].trim() : 'அறிவிப்பு',
+            time: Date.now()
+          });
+        }
+      } catch(e) {}
+    }
+    window._announcements = items;
+    console.log(`Announcements: ${items.length} loaded from GitHub`);
+  } catch(e) {
+    console.warn('Announcements fetch error:', e);
+    window._announcements = [];
+  }
 }
 
 // ══ RENDER FUNCTIONS ══
@@ -1272,9 +1480,9 @@ window.renderAnnouncements = function() {
   if (!el) return;
   const list = window._announcements;
   if (!list.length) { el.innerHTML = '<div class="no-req">📭 அறிவிப்புகள் இல்லை</div>'; return; }
-  const typeColor = { 'புதியது': 'bnew', 'அறிவிப்பு': 'bnotice', 'நிகழ்வு': 'bnew', 'அவசரம்': 'bnotice' };
-  const typeIcon = { 'புதியது': '🎉', 'அறிவிப்பு': '📢', 'நிகழ்வு': '🎊', 'அவசரம்': '🚨' };
-  const iconBg = { 'புதியது': 'var(--gl)', 'அறிவிப்பு': 'var(--gol)', 'நிகழ்வு': 'var(--gl)', 'அவசரம்': '#fde8e8' };
+  const typeColor = { 'புதியது': 'bnew', 'அறிவிப்பு': 'bnotice', 'நிகழ்வு': 'bnew', 'அவசரம்': 'bnotice', 'கோரிக்கை': 'bnotice' };
+  const typeIcon = { 'புதியது': '🎉', 'அறிவிப்பு': '📢', 'நிகழ்வு': '🎊', 'அவசரம்': '🚨', 'கோரிக்கை': '📋' };
+  const iconBg = { 'புதியது': 'var(--gl)', 'அறிவிப்பு': 'var(--gol)', 'நிகழ்வு': 'var(--gl)', 'அவசரம்': '#fde8e8', 'கோரிக்கை': '#f0e8ff' };
   el.innerHTML = list.map(a => `
     <div class="ann-card">
       <div class="a-icon" style="background:${iconBg[a.type]||'var(--gl)'};">${typeIcon[a.type]||'📢'}</div>
@@ -1354,20 +1562,23 @@ window.renderFacilities = function() {
 
 // ══ NAVIGATION ══
 window.show = function(id, btn) {
-  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  // Smooth scroll to section
+  const el = document.getElementById(id);
+  if (!el) return;
+  const topbar = document.querySelector('.topbar');
+  const topH = topbar ? topbar.offsetHeight : 56;
+  const mbar = document.querySelector('.mbar');
+  const mbarH = mbar ? mbar.offsetHeight : 32;
+  const offset = el.getBoundingClientRect().top + window.scrollY - topH - mbarH - 8;
+  window.scrollTo({ top: offset, behavior: 'smooth' });
+  // Update nav active
   document.querySelectorAll('.dnav button, .bnav button, .desktop-nav button').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  else {
-    const idx = ['home','news','collector','hospital','facilities'].indexOf(id);
-    if (idx >= 0) document.querySelectorAll('.bnav button')[idx]?.classList.add('active');
-  }
-  // sync desktop nav
-  document.querySelectorAll('.desktop-nav button').forEach(b => {
-    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`)) b.classList.add('active');
+  document.querySelectorAll('.desktop-nav button, .bnav button').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+id+"'")) b.classList.add('active');
   });
-  window.scrollTo(0, 0);
-  if (id === 'admin' && document.getElementById('adminUnlocked').style.display !== 'none') {
+  closeDrawer();
+  if (id === 'admin' && document.getElementById('adminUnlocked') && document.getElementById('adminUnlocked').style.display !== 'none') {
     renderRequests();
     renderFacilities();
   }
@@ -1710,6 +1921,30 @@ window.adminEditLeader = function(id) {
 
 window.closeModal = function(id) { document.getElementById(id).classList.remove('show'); }
 
+
+// ══ SCROLL SPY ══
+window.addEventListener('scroll', () => {
+  const sections = ['home','news','history','leaders','collector','hospital','facilities','gallery','contact'];
+  const topH = 100;
+  let current = 'home';
+  for (const id of sections) {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= topH + 10) {
+      current = id;
+    }
+  }
+  // Update bottom nav
+  document.querySelectorAll('.bnav button').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+current+"'")) b.classList.add('active');
+  });
+  // Update desktop nav
+  document.querySelectorAll('.desktop-nav button').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+current+"'")) b.classList.add('active');
+  });
+}, { passive: true });
+
 // ══ INIT ══
 checkAutoLogin();
 updateBadge();
@@ -1727,7 +1962,7 @@ if (window.netlifyIdentity) {
     }
   });
 }
-// Token handling moved to checkAutoLogin
+// Token handling in checkAutoLogin
 </script>
 </body>
 </html>
