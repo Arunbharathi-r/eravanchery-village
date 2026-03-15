@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>54 எரவாஞ்சேரி கிராமம்</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Tamil:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- ════ FIREBASE CONFIG — உங்கள் config இங்கே மாற்றுங்கள் ════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// ✏️ உங்கள் Firebase config இங்கே paste செய்யுங்கள்
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// Global expose for non-module functions
+window._db = db;
+window._storage = storage;
+window._fb = { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot, orderBy, query, ref, uploadBytes, getDownloadURL, deleteObject };
+
+// ── Real-time listeners ──
+function startListeners() {
+  // Announcements
+  const annQ = query(collection(db, 'announcements'), orderBy('time', 'desc'));
+  onSnapshot(annQ, snap => {
+    window._announcements = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (typeof renderAnnouncements === 'function') renderAnnouncements();
+  });
+  // Gallery
+  const galQ = query(collection(db, 'gallery'), orderBy('time', 'desc'));
+  onSnapshot(galQ, snap => {
+    window._gallery = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (typeof renderGallery === 'function') renderGallery();
+  });
+  // Leaders
+  onSnapshot(collection(db, 'leaders'), snap => {
+    window._leaders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (typeof renderLeaders === 'function') renderLeaders();
+  });
+  // Facilities
+  onSnapshot(collection(db, 'facilities'), snap => {
+    window._facilities = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (typeof renderFacilities === 'function') renderFacilities();
+  });
+}
+
+window.startFirebaseListeners = startListeners;
+
+// ── Admin: Add announcement ──
+window.fbAddAnnouncement = async (data) => {
+  await addDoc(collection(db, 'announcements'), { ...data, time: Date.now() });
+};
+
+// ── Admin: Delete announcement ──
+window.fbDeleteAnnouncement = async (id) => {
+  await deleteDoc(doc(db, 'announcements', id));
+};
+
+// ── Admin: Upload image & add to gallery ──
+window.fbUploadImage = async (file, caption) => {
+  const r = ref(storage, `gallery/${Date.now()}_${file.name}`);
+  const snap = await uploadBytes(r, file);
+  const url = await getDownloadURL(snap.ref);
+  await addDoc(collection(db, 'gallery'), { url, caption, path: snap.ref.fullPath, time: Date.now() });
+  return url;
+};
+
+// ── Admin: Delete gallery image ──
+window.fbDeleteGallery = async (id, path) => {
+  await deleteDoc(doc(db, 'gallery', id));
+  try { await deleteObject(ref(storage, path)); } catch {}
+};
+
+// ── Admin: Update leader ──
+window.fbUpdateLeader = async (id, data) => {
+  if (id) {
+    await updateDoc(doc(db, 'leaders', id), data);
+  } else {
+    await addDoc(collection(db, 'leaders'), data);
+  }
+};
+
+// ── Admin: Upload leader photo ──
+window.fbUploadLeaderPhoto = async (file, leaderId) => {
+  const r = ref(storage, `leaders/${leaderId}_${Date.now()}`);
+  const snap = await uploadBytes(r, file);
+  return await getDownloadURL(snap.ref);
+};
+
+// ── Admin: Update facility ──
+window.fbUpdateFacility = async (id, data) => {
+  if (id) {
+    await updateDoc(doc(db, 'facilities', id), data);
+  } else {
+    await addDoc(collection(db, 'facilities'), data);
+  }
+};
+
+// ── Seed default data if empty ──
+window.fbSeedDefaults = async () => {
+  const leaders = await getDocs(collection(db, 'leaders'));
+  if (leaders.empty) {
+    const defaults = [
+      { role: 'கிராம தலைவர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 1 },
+      { role: 'வார்டு உறுப்பினர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 2 },
+      { role: 'பஞ்சாயத்து அலுவலர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 3 },
+    ];
+    for (const d of defaults) await addDoc(collection(db, 'leaders'), d);
+  }
+  const fac = await getDocs(collection(db, 'facilities'));
+  if (fac.empty) {
+    const defaults = [
+      { name: 'குடிநீர்', icon: '💧', status: 'yes' },
+      { name: 'மின்சாரம்', icon: '⚡', status: 'yes' },
+      { name: 'தார் சாலை', icon: '🛣️', status: 'partial' },
+      { name: 'பேருந்து வசதி', icon: '🚌', status: 'no' },
+      { name: 'பள்ளி', icon: '🏫', status: 'yes' },
+      { name: 'இணையம்', icon: '🌐', status: 'partial' },
+      { name: 'வங்கி / ATM', icon: '🏦', status: 'partial' },
+      { name: 'சாக்கடை', icon: '🚰', status: 'no' },
+    ];
+    for (const d of defaults) await addDoc(collection(db, 'facilities'), d);
+  }
+};
+</script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--g:#1a6b3c;--gl:#e8f5ee;--gm:#2d9e5a;--gold:#c8870a;--gol:#fdf3dc;--cream:#fdf8f0;--tx:#1a1a1a;--mu:#555;--bl:#1565c0;--re:#c0392b;}
+body{font-family:'Noto Sans Tamil',sans-serif;background:var(--cream);color:var(--tx);font-size:15px;}
+#appLogin{display:block;}
+#appMain{display:none;}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;background:linear-gradient(160deg,#0d4a26,#1a6b3c 55%,#2d9e5a);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;}
+.login-logo{text-align:center;margin-bottom:1.5rem;}
+.login-logo .li{font-size:3rem;margin-bottom:.4rem;}
+.login-logo h1{color:#ffd96b;font-family:'Noto Serif Tamil',serif;font-size:1.3rem;font-weight:700;margin-bottom:.25rem;}
+.login-logo p{color:rgba(255,255,255,.72);font-family:'Noto Serif Tamil',serif;font-size:.78rem;}
+.login-card{background:#fff;border-radius:20px;padding:1.75rem 1.5rem;width:100%;max-width:360px;box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.lstep{display:none;}
+.lstep.active{display:block;}
+.ls-icon{width:52px;height:52px;border-radius:50%;margin:0 auto .65rem;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.ls-title{font-size:1rem;font-weight:700;color:#1a1a1a;font-family:'Noto Serif Tamil',serif;text-align:center;margin-bottom:.2rem;}
+.ls-sub{font-size:.75rem;color:#666;font-family:'Noto Serif Tamil',serif;text-align:center;margin-bottom:1.25rem;}
+.errbox{background:#fde8e8;border:1px solid #f5b8b8;border-radius:8px;padding:.5rem .85rem;font-size:.78rem;color:#c0392b;font-family:'Noto Serif Tamil',serif;text-align:center;margin-bottom:.85rem;display:none;}
+.flbl{font-size:.78rem;font-weight:600;color:#333;margin-bottom:.4rem;display:block;font-family:'Noto Serif Tamil',serif;}
+.phone-wrap{display:flex;border:2px solid #e0e8e3;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:1rem;transition:border-color .2s;}
+.phone-wrap:focus-within{border-color:var(--gm);}
+.phone-prefix{background:#e8f5ee;padding:.72rem .9rem;font-size:.9rem;font-weight:700;color:#1a6b3c;display:flex;align-items:center;border-right:2px solid #e0e8e3;}
+.phone-wrap input{flex:1;border:none;padding:.72rem .9rem;font-size:1rem;color:#1a1a1a;outline:none;background:#fff;font-family:'Noto Sans Tamil',sans-serif;min-width:0;}
+.phone-wrap input::placeholder{color:#bbb;}
+.phone-ok{padding:.72rem .75rem;font-size:18px;display:none;align-items:center;color:#1a6b3c;}
+.otp-row{display:flex;gap:.45rem;justify-content:center;margin-bottom:1.1rem;}
+.otp-box{width:46px;height:52px;border:2px solid #e0e8e3;border-radius:10px;text-align:center;font-size:1.4rem;font-weight:700;color:#1a1a1a;outline:none;background:#fafafa;font-family:'Noto Sans Tamil',sans-serif;transition:border-color .2s;}
+.otp-box:focus{border-color:var(--gm);background:#fff;}
+.otp-box.filled{border-color:var(--gm);background:#f0fbf5;}
+.demo-otp{background:#fffbe6;border:1.5px dashed #c8870a;border-radius:10px;padding:.6rem .9rem;text-align:center;margin-bottom:1rem;}
+.demo-otp .dl{font-size:.68rem;color:#c8870a;font-family:'Noto Serif Tamil',serif;margin-bottom:.2rem;}
+.demo-otp .dn{font-size:1.6rem;font-weight:700;color:#1a1a1a;letter-spacing:.2em;}
+.btn-g{width:100%;background:#1a6b3c;color:#fff;border:none;border-radius:12px;padding:.85rem;font-size:.95rem;font-weight:700;cursor:pointer;font-family:'Noto Serif Tamil',serif;transition:background .2s;margin-bottom:.65rem;}
+.btn-g:hover{background:#155a32;}
+.btn-out{width:100%;background:#fff;color:#1a6b3c;border:2px solid #1a6b3c;border-radius:12px;padding:.7rem;font-size:.85rem;font-weight:600;cursor:pointer;font-family:'Noto Serif Tamil',serif;}
+.back-btn{background:none;border:none;font-size:.82rem;color:#1a6b3c;cursor:pointer;font-family:'Noto Serif Tamil',serif;font-weight:600;display:flex;align-items:center;gap:.3rem;margin-bottom:1rem;padding:0;}
+.resend-row{text-align:center;margin-top:.65rem;font-size:.75rem;color:#666;font-family:'Noto Serif Tamil',serif;}
+.resend-btn{background:none;border:none;font-size:.75rem;color:#1a6b3c;cursor:pointer;font-weight:700;font-family:'Noto Serif Tamil',serif;}
+.resend-btn:disabled{color:#bbb;cursor:not-allowed;}
+.login-hint{margin-top:1rem;text-align:center;color:rgba(255,255,255,.45);font-size:.67rem;font-family:'Noto Serif Tamil',serif;line-height:1.85;}
+.login-hint b{color:rgba(255,255,255,.72);}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--g);padding:0 1rem;display:flex;align-items:center;gap:.75rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.2);height:56px;}
+.hbg{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:6px;flex-shrink:0;}
+.hbg span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all .3s;}
+.hbg.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hbg.open span:nth-child(2){opacity:0;}
+.hbg.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.logo{color:#fff;font-family:'Noto Serif Tamil',serif;cursor:pointer;flex:1;line-height:1.3;}
+.logo b{font-size:.92rem;display:block;}
+.logo small{color:#ffd96b;font-size:.68rem;font-weight:400;}
+.notif-btn{background:none;border:none;cursor:pointer;position:relative;padding:6px;flex-shrink:0;}
+.notif-btn span{font-size:20px;}
+.notif-count{position:absolute;top:2px;right:2px;background:#e53935;color:#fff;font-size:.58rem;font-weight:700;border-radius:99px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px;}
+
+/* ── MARQUEE ── */
+.mbar{background:var(--gold);padding:.42rem 0;display:flex;align-items:center;overflow:hidden;border-bottom:2px solid #a06a00;}
+.mlbl{background:#8b4500;color:#ffd96b;padding:.28rem .85rem;font-size:.68rem;font-weight:700;white-space:nowrap;font-family:'Noto Serif Tamil',serif;flex-shrink:0;}
+.mtrack{overflow:hidden;flex:1;}
+.mcontent{display:inline-flex;animation:mscroll 28s linear infinite;white-space:nowrap;}
+.mcontent:hover{animation-play-state:paused;}
+.mitem{color:#fff;font-size:.76rem;font-family:'Noto Serif Tamil',serif;padding:0 2rem;display:inline-flex;align-items:center;gap:.4rem;}
+.mitem::before{content:'●';color:#ffd96b;font-size:.45rem;}
+@keyframes mscroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── DRAWER ── */
+.drawer{position:fixed;top:0;left:-100%;width:280px;height:100vh;background:var(--g);z-index:300;transition:left .3s;overflow-y:auto;padding-top:56px;}
+.drawer.open{left:0;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:250;}
+.overlay.show{display:block;}
+.dnav button{display:flex;align-items:center;gap:.75rem;background:none;border:none;color:rgba(255,255,255,.85);padding:.85rem 1.4rem;cursor:pointer;font-family:'Noto Sans Tamil',sans-serif;font-size:.92rem;font-weight:500;border-bottom:1px solid rgba(255,255,255,.08);width:100%;text-align:left;transition:all .2s;}
+.dnav button:hover,.dnav button.active{color:#ffd96b;background:rgba(255,255,255,.07);padding-left:1.85rem;}
+.dicon{font-size:16px;width:20px;text-align:center;}
+.dadmin{background:rgba(255,215,0,.08)!important;border-top:1px solid rgba(255,215,0,.15)!important;}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e0e8e3;display:flex;z-index:200;box-shadow:0 -2px 8px rgba(0,0,0,.07);}
+.bnav button{flex:1;background:none;border:none;padding:.5rem .1rem;cursor:pointer;font-family:'Noto Sans Tamil',sans-serif;font-size:.55rem;font-weight:500;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .2s;}
+.bnav button .bi{font-size:17px;line-height:1;}
+.bnav button.active{color:var(--g);}
+
+section{display:none;padding-bottom:74px;}
+section.active{display:block;}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(160deg,#0d4a26,#1a6b3c 55%,#2d9e5a);color:#fff;padding:2rem 1.25rem 1.75rem;text-align:center;}
+.hero-badge{display:inline-block;background:rgba(255,217,107,.2);border:1px solid rgba(255,217,107,.4);color:#ffd96b;padding:.3rem .9rem;border-radius:99px;font-size:.7rem;margin-bottom:.8rem;font-family:'Noto Serif Tamil',serif;}
+.hero h1{font-size:1.75rem;font-weight:700;line-height:1.3;margin-bottom:.4rem;font-family:'Noto Serif Tamil',serif;}
+.hero h1 span{color:#ffd96b;}
+.hero-loc{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.12);padding:.35rem .9rem;border-radius:99px;font-size:.75rem;font-family:'Noto Serif Tamil',serif;margin-bottom:.3rem;}
+.hero-loc2{font-size:.7rem;color:rgba(255,255,255,.58);font-family:'Noto Serif Tamil',serif;}
+.hstats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:1.3rem;border-top:1px solid rgba(255,255,255,.15);padding-top:1rem;}
+.hstat{text-align:center;}
+.hstat-n{font-size:1.2rem;font-weight:700;color:#ffd96b;font-family:'Noto Serif Tamil',serif;}
+.hstat-l{font-size:.55rem;color:rgba(255,255,255,.55);margin-top:.1rem;}
+
+/* ── CONTAINER ── */
+.container{padding:1.3rem 1rem;max-width:960px;margin:0 auto;}
+.sec-hd{font-size:1.2rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;margin-bottom:.2rem;}
+.sec-sub{font-size:.8rem;color:var(--gold);margin-bottom:.75rem;}
+.divider{height:3px;width:36px;background:var(--gold);border-radius:2px;margin-bottom:1.1rem;}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:12px;padding:1rem 1.1rem;border:1px solid #e0e8e3;margin-bottom:.85rem;}
+.card-g{border-left:4px solid var(--gm);}
+.card h3{font-size:.92rem;font-weight:600;color:var(--g);margin-bottom:.45rem;font-family:'Noto Serif Tamil',serif;}
+.card p{line-height:1.85;color:#444;font-size:.83rem;}
+
+/* ── ANNOUNCEMENTS ── */
+.ann-card{background:#fff;border-radius:12px;padding:.85rem 1rem;border:1px solid #e0e8e3;display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.8rem;position:relative;}
+.a-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.a-date{font-size:.65rem;color:var(--mu);margin-bottom:.15rem;}
+.a-title{font-size:.9rem;font-weight:600;font-family:'Noto Serif Tamil',serif;margin-bottom:.2rem;}
+.a-desc{font-size:.8rem;color:#555;line-height:1.7;}
+.a-del{position:absolute;top:.6rem;right:.6rem;background:#fde8e8;border:none;border-radius:6px;padding:.2rem .5rem;font-size:.7rem;cursor:pointer;color:var(--re);display:none;}
+.admin-mode .a-del{display:block;}
+.badge{display:inline-block;font-size:.6rem;padding:.12rem .5rem;border-radius:99px;font-weight:600;margin-bottom:.2rem;}
+.bnew{background:#dcf5e8;color:#1a6b3c;}
+.bnotice{background:var(--gol);color:var(--gold);}
+
+/* ── UPDATE CARD ── */
+.ucard{background:#fff;border-radius:14px;border:1px solid #e0e8e3;margin-bottom:.85rem;overflow:hidden;}
+.uhead{background:linear-gradient(90deg,#1a6b3c,#2d9e5a);padding:.55rem 1rem;display:flex;align-items:center;gap:.5rem;}
+.uhead span{color:#ffd96b;font-size:.72rem;font-weight:700;font-family:'Noto Serif Tamil',serif;}
+.udot{width:8px;height:8px;border-radius:50%;background:#ffd96b;animation:blink 1.2s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── QUICK LINKS ── */
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin:.85rem 0;}
+.qbtn{background:#fff;border:1px solid #e0e8e3;border-radius:12px;padding:.8rem .5rem;text-align:center;cursor:pointer;transition:all .2s;}
+.qbtn:hover{border-color:var(--gm);background:var(--gl);}
+.qbtn .qi{font-size:1.35rem;margin-bottom:.28rem;}
+.qbtn .ql{font-size:.67rem;font-weight:600;color:var(--g);font-family:'Noto Serif Tamil',serif;line-height:1.3;}
+
+/* ── INFO GRID ── */
+.igrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem;margin-top:.8rem;}
+.iitem{background:var(--gl);border-radius:10px;padding:.65rem .85rem;}
+.iitem .il{font-size:.63rem;color:var(--g);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.15rem;}
+.iitem .iv{font-size:.85rem;font-weight:600;font-family:'Noto Serif Tamil',serif;}
+
+/* ── GALLERY ── */
+.ggrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;}
+.gitem{border-radius:12px;overflow:hidden;aspect-ratio:4/3;position:relative;background:#ddd;}
+.gitem img{width:100%;height:100%;object-fit:cover;display:block;}
+.glbl{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,.65),transparent);color:#fff;padding:.45rem .55rem;font-size:.7rem;font-weight:500;font-family:'Noto Serif Tamil',serif;}
+.gdel{position:absolute;top:.4rem;right:.4rem;background:rgba(220,53,69,.85);color:#fff;border:none;border-radius:6px;padding:.2rem .5rem;font-size:.65rem;cursor:pointer;display:none;}
+.admin-mode .gdel{display:block;}
+
+/* ── LEADERS ── */
+.lgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;}
+.lcard{background:#fff;border-radius:14px;padding:1rem;border:1px solid #e0e8e3;text-align:center;position:relative;}
+.lphoto{width:62px;height:62px;border-radius:50%;margin:0 auto .65rem;background:var(--gl);border:2px solid #c8dfd0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden;cursor:pointer;}
+.lphoto img{width:100%;height:100%;object-fit:cover;}
+.lname{font-weight:600;font-size:.88rem;font-family:'Noto Serif Tamil',serif;margin-bottom:.15rem;}
+.lrole{font-size:.65rem;color:var(--g);font-weight:600;margin-bottom:.32rem;}
+.lphone{font-size:.75rem;color:var(--mu);}
+.ledit{position:absolute;top:.5rem;right:.5rem;background:var(--gl);border:none;border-radius:6px;padding:.2rem .5rem;font-size:.65rem;cursor:pointer;color:var(--g);display:none;}
+.admin-mode .ledit{display:block;}
+
+/* ── FACILITIES ── */
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;}
+.fcard{background:#fff;border-radius:12px;padding:.85rem;border:1px solid #e0e8e3;text-align:center;position:relative;}
+.fcard .fi{font-size:1.55rem;margin-bottom:.32rem;}
+.fcard .fn{font-size:.78rem;font-weight:600;font-family:'Noto Serif Tamil',serif;margin-bottom:.28rem;}
+.fyes{background:#dcf5e8;color:#1a6b3c;font-size:.65rem;font-weight:600;padding:.18rem .55rem;border-radius:99px;display:inline-block;}
+.fpart{background:var(--gol);color:var(--gold);font-size:.65rem;font-weight:600;padding:.18rem .55rem;border-radius:99px;display:inline-block;}
+.fno{background:#fde8e8;color:var(--re);font-size:.65rem;font-weight:600;padding:.18rem .55rem;border-radius:99px;display:inline-block;}
+.fedit{position:absolute;top:.4rem;right:.4rem;background:var(--gl);border:none;border-radius:6px;padding:.15rem .45rem;font-size:.62rem;cursor:pointer;color:var(--g);display:none;}
+.admin-mode .fedit{display:block;}
+
+/* ── HOSPITAL ── */
+.hcard{background:#fff;border-radius:12px;border:1px solid #e0e8e3;margin-bottom:.85rem;overflow:hidden;}
+.hcard-h{padding:.85rem 1rem;display:flex;align-items:center;gap:.85rem;}
+.hcard-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.tags{padding:0 1rem .75rem;display:flex;flex-wrap:wrap;gap:.4rem;}
+.tag{font-size:.67rem;padding:.18rem .55rem;border-radius:99px;font-weight:500;}
+.topen{background:#dcf5e8;color:#1a6b3c;}
+.t24{background:#e8f0fb;color:#1565c0;}
+.temer{background:#fde8e8;color:var(--re);}
+.tspec{background:var(--gol);color:var(--gold);}
+.ttime{background:var(--gol);color:var(--gold);}
+
+/* ── COLLECTOR ── */
+.colcard{background:#fff;border-radius:16px;border:1px solid #e0e8e3;overflow:hidden;margin-bottom:1rem;}
+.colhead{background:linear-gradient(135deg,#1a6b3c,#2d9e5a);padding:1.5rem 1.25rem;text-align:center;}
+.colphoto{width:80px;height:80px;border-radius:50%;border:3px solid rgba(255,255,255,.5);margin:0 auto .75rem;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:2rem;overflow:hidden;}
+.colphoto img{width:100%;height:100%;object-fit:cover;}
+.colbody{padding:1rem 1.25rem;}
+.crow{display:flex;gap:.75rem;padding:.6rem 0;border-bottom:1px solid #f0f0f0;align-items:center;}
+.crow:last-child{border-bottom:none;}
+.cicon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+
+/* ── CONTACT FORM ── */
+.form-sec{background:#fff;border-radius:14px;border:1px solid #e0e8e3;overflow:hidden;margin-bottom:1rem;}
+.form-head{background:linear-gradient(90deg,#1a6b3c,#2d9e5a);padding:.75rem 1.1rem;}
+.form-head span{color:#ffd96b;font-size:.85rem;font-weight:700;font-family:'Noto Serif Tamil',serif;}
+.form-body{padding:1.1rem;}
+.field{margin-bottom:.9rem;}
+.field label{display:block;font-size:.75rem;font-weight:600;color:var(--g);margin-bottom:.35rem;font-family:'Noto Serif Tamil',serif;}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid #dde4e0;border-radius:8px;padding:.6rem .8rem;font-size:.85rem;font-family:'Noto Sans Tamil',sans-serif;background:#fff;color:var(--tx);outline:none;transition:border .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gm);}
+.field textarea{height:90px;resize:vertical;}
+.req-type{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.9rem;}
+.rtype{border:1.5px solid #dde4e0;border-radius:8px;padding:.6rem .5rem;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa;}
+.rtype.sel{border-color:var(--gm);background:var(--gl);}
+.rtype .rti{font-size:1.2rem;margin-bottom:.2rem;}
+.rtype .rtl{font-size:.68rem;font-weight:600;color:var(--g);font-family:'Noto Serif Tamil',serif;}
+.sbtn{width:100%;background:var(--g);color:#fff;border:none;border-radius:10px;padding:.75rem;font-size:.9rem;font-weight:600;cursor:pointer;font-family:'Noto Serif Tamil',serif;}
+.success-msg{display:none;background:#dcf5e8;border:1px solid #b8d4c8;border-radius:10px;padding:1rem;text-align:center;margin-top:.75rem;font-size:.85rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;}
+
+/* ── ADMIN PANEL ── */
+.admin-sec{background:#fff;border-radius:14px;border:1px solid #e0e8e3;overflow:hidden;margin-bottom:1rem;}
+.admin-sec-head{background:linear-gradient(90deg,#1a6b3c,#2d9e5a);padding:.65rem 1rem;display:flex;align-items:center;gap:.5rem;}
+.admin-sec-head span{color:#ffd96b;font-size:.82rem;font-weight:700;font-family:'Noto Serif Tamil',serif;}
+.admin-sec-body{padding:1rem;}
+.admin-badge{display:flex;align-items:center;gap:.5rem;background:var(--gl);border-radius:10px;padding:.6rem .9rem;margin-bottom:1rem;border:1px solid #b8d4c8;}
+.admin-badge span{font-size:.8rem;color:var(--g);font-weight:600;font-family:'Noto Serif Tamil',serif;}
+.pin-input{display:flex;gap:.5rem;justify-content:center;margin-bottom:1rem;}
+.pin-input input{width:44px;height:44px;border:2px solid #dde4e0;border-radius:8px;text-align:center;font-size:1.1rem;font-weight:700;color:var(--tx);outline:none;}
+.pin-input input:focus{border-color:var(--gm);}
+
+/* ── MODAL ── */
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:1rem;}
+.modal-wrap.show{display:flex;}
+.modal{background:#fff;border-radius:18px;padding:1.5rem;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;}
+.modal h3{font-size:1rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;margin-bottom:1rem;}
+.modal-close{float:right;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#888;margin-top:-4px;}
+.img-preview{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:.75rem;display:none;}
+
+/* ── REQUESTS ── */
+.req-item{background:#fff;border-radius:12px;border:1px solid #e0e8e3;padding:.9rem 1rem;margin-bottom:.75rem;position:relative;}
+.ri-type{display:inline-block;font-size:.62rem;font-weight:700;padding:.15rem .55rem;border-radius:99px;margin-bottom:.35rem;}
+.ri-name{font-size:.9rem;font-weight:600;font-family:'Noto Serif Tamil',serif;margin-bottom:.2rem;}
+.ri-msg{font-size:.8rem;color:#555;line-height:1.65;}
+.ri-meta{font-size:.68rem;color:var(--mu);margin-top:.4rem;}
+.ri-del{position:absolute;top:.75rem;right:.75rem;background:#fde8e8;border:none;border-radius:6px;padding:.25rem .55rem;font-size:.7rem;cursor:pointer;color:var(--re);}
+.no-req{text-align:center;padding:2rem;color:var(--mu);font-size:.85rem;font-family:'Noto Serif Tamil',serif;}
+
+/* ── FOOTER ── */
+footer{background:var(--g);color:rgba(255,255,255,.8);text-align:center;padding:1rem;font-size:.75rem;font-family:'Noto Serif Tamil',serif;line-height:1.9;}
+footer strong{color:#ffd96b;}
+.femerg{display:flex;justify-content:center;gap:1rem;margin-top:.5rem;flex-wrap:wrap;}
+.femerg span{font-size:.68rem;background:rgba(255,255,255,.1);padding:.2rem .6rem;border-radius:99px;}
+
+/* ── LOADING ── */
+.loading{text-align:center;padding:2rem;color:var(--mu);font-size:.85rem;font-family:'Noto Serif Tamil',serif;}
+
+/* ── FLOATING BUTTONS ── */
+.float-btns{position:fixed;bottom:85px;right:16px;display:flex;flex-direction:column;gap:10px;z-index:199;}
+.float-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:transform .2s;}
+.float-btn:hover{transform:scale(1.12);}
+.float-wa{background:#25D366;}
+.float-call{background:#1a6b3c;}
+.float-label{position:absolute;right:60px;background:rgba(0,0,0,.72);color:#fff;padding:.25rem .65rem;border-radius:6px;font-size:.7rem;white-space:nowrap;font-family:'Noto Serif Tamil',serif;pointer-events:none;opacity:0;transition:opacity .2s;}
+.float-btn:hover .float-label{opacity:1;}
+@media(min-width:768px){.float-btns{bottom:24px;right:24px;}}
+
+/* ── QUICK LINKS ── */
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin:.85rem 0;}
+.qbtn{background:#fff;border:2px solid #d0e8d8;border-radius:14px;padding:.85rem .5rem .7rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;text-decoration:none;display:block;}
+.qbtn:hover{border-color:var(--gm);background:var(--gl);transform:translateY(-2px);box-shadow:0 4px 12px rgba(26,107,60,.12);}
+.qbtn .qi{font-size:1.5rem;margin-bottom:.3rem;display:block;}
+.qbtn .ql{font-size:.7rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;line-height:1.3;display:block;}
+.qbtn .qa{font-size:.6rem;color:var(--gm);margin-top:.2rem;display:block;font-weight:600;}
+.qbtn::after{content:'→';position:absolute;bottom:6px;right:8px;font-size:.65rem;color:var(--gm);opacity:.7;}
+.desktop-nav{display:none;align-items:center;gap:.2rem;}
+.desktop-nav button{background:none;border:none;color:rgba(255,255,255,.82);padding:.5rem .75rem;cursor:pointer;font-family:'Noto Sans Tamil',sans-serif;font-size:.78rem;font-weight:500;border-radius:8px;transition:all .2s;white-space:nowrap;}
+.desktop-nav button:hover,.desktop-nav button.active{color:#ffd96b;background:rgba(255,255,255,.1);}
+
+@media(min-width:768px){
+  .igrid{grid-template-columns:repeat(4,1fr);}
+  .qgrid{grid-template-columns:repeat(6,1fr);}
+  .fgrid{grid-template-columns:repeat(4,1fr);}
+  .ggrid{grid-template-columns:repeat(3,1fr);}
+  .lgrid{grid-template-columns:repeat(3,1fr);}
+  .req-type{grid-template-columns:repeat(4,1fr);}
+  .hero h1{font-size:2.3rem;}
+  .bnav{display:none;}
+  .topbar{padding:0 2rem;height:60px;}
+  .desktop-nav{display:flex;}
+  .hbg{width:38px;height:38px;border-radius:8px;border:1.5px solid rgba(255,255,255,.3)!important;display:flex;align-items:center;justify-content:center;padding:0;transition:background .2s;}
+  .hbg:hover{background:rgba(255,255,255,.12);}
+  .hbg span{width:16px;height:1.5px;}
+  .logo b{font-size:1rem;}
+  .logo small{font-size:.72rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ LOGIN ════ -->
+<div id="appLogin">
+<div class="login-wrap">
+  <div class="login-logo">
+    <div class="li">🌾</div>
+    <h1>54 எரவாஞ்சேரி கிராமம்</h1>
+    <p>தரங்கம்பாடி வட்டம் · மயிலாடுதுறை மாவட்டம்</p>
+  </div>
+  <div class="login-card">
+    <!-- Step 1: Phone -->
+    <div class="lstep active" id="lstep1">
+      <div class="ls-icon" style="background:#e8f5ee;">📱</div>
+      <div class="ls-title">தொலைபேசி எண் உள்ளிடுங்கள்</div>
+      <div class="ls-sub">OTP அனுப்பப்படும் (Demo mode)</div>
+      <div class="errbox" id="err1">சரியான 10 இலக்க எண் உள்ளிடுங்கள்.</div>
+      <label class="flbl">கைபேசி எண் *</label>
+      <div class="phone-wrap" id="phoneBox">
+        <div class="phone-prefix">+91</div>
+        <input id="mobileInp" type="tel" maxlength="10" placeholder="9876543210"
+          oninput="this.value=this.value.replace(/\D/g,'');(function(){var v=document.getElementById('mobileInp').value;document.getElementById('phoneBox').style.borderColor=v.length===10?'#2d9e5a':'#e0e8e3';document.getElementById('phoneOk').style.display=v.length===10?'flex':'none';})()"
+          onkeydown="if(event.key==='Enter')sendOTP()">
+        <div class="phone-ok" id="phoneOk">✅</div>
+      </div>
+      <button class="btn-g" onclick="sendOTP()">OTP அனுப்பு 📲</button>
+      <hr style="border:none;border-top:1px solid #f0f0f0;margin:.5rem 0;">
+      <button class="btn-out" onclick="guestLogin()">👥 விருந்தினராக தொடரவும்</button>
+    </div>
+    <!-- Step 2: OTP -->
+    <div class="lstep" id="lstep2">
+      <button class="back-btn" onclick="backStep()">← திரும்பு</button>
+      <div class="ls-icon" style="background:#e8f0fb;">🔐</div>
+      <div class="ls-title">OTP உள்ளிடுங்கள்</div>
+      <div class="ls-sub" id="sentTo">+91 XXXXXXXXXX எண்ணுக்கு அனுப்பப்பட்டது</div>
+      <div class="errbox" id="err2">OTP தவறானது. மீண்டும் முயற்சிக்கவும்.</div>
+      <div class="demo-otp">
+        <div class="dl">📲 Demo OTP (சோதனை மட்டும்)</div>
+        <div class="dn" id="demoOTP">------</div>
+      </div>
+      <div class="otp-row">
+        <input type="tel" maxlength="1" class="otp-box" id="o1" oninput="oi(this,'o2')" onkeydown="ok(event,this,null,'o2')">
+        <input type="tel" maxlength="1" class="otp-box" id="o2" oninput="oi(this,'o3')" onkeydown="ok(event,this,'o1','o3')">
+        <input type="tel" maxlength="1" class="otp-box" id="o3" oninput="oi(this,'o4')" onkeydown="ok(event,this,'o2','o4')">
+        <input type="tel" maxlength="1" class="otp-box" id="o4" oninput="oi(this,'o5')" onkeydown="ok(event,this,'o3','o5')">
+        <input type="tel" maxlength="1" class="otp-box" id="o5" oninput="oi(this,'o6')" onkeydown="ok(event,this,'o4','o6')">
+        <input type="tel" maxlength="1" class="otp-box" id="o6" oninput="oi(this,null)" onkeydown="ok(event,this,'o5',null)">
+      </div>
+      <button class="btn-g" onclick="verifyOTP()">சரிபார்க்கவும் ✓</button>
+      <div class="resend-row">OTP வரவில்லையா?
+        <button class="resend-btn" id="resendBtn" onclick="resendOTP()" disabled>
+          மீண்டும் அனுப்பு (<span id="cdTimer">30</span>s)
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="login-hint">
+    நிர்வாகி எண்: <b>9999999999</b> → Admin panel கிடைக்கும்<br>
+    மற்ற எந்த எண்ணும் → பயனர் அணுகல்
+  </div>
+</div>
+</div>
+
+<!-- ════ MAIN APP ════ -->
+<div id="appMain" style="display:none;">
+
+<div class="topbar">
+  <button class="hbg" id="hbgBtn" onclick="toggleDrawer()"><span></span><span></span><span></span></button>
+  <div class="logo" onclick="show('home')">
+    <b>54 எரவாஞ்சேரி கிராமம்</b>
+    <small>தரங்கம்பாடி வட்டம் · மயிலாடுதுறை மாவட்டம்</small>
+  </div>
+  <nav class="desktop-nav" id="desktopNav">
+    <button onclick="show('home',this)">🏠 முகப்பு</button>
+    <button onclick="show('news',this)">📢 அறிவிப்புகள்</button>
+    <button onclick="show('hospital',this)">🏥 மருத்துவம்</button>
+    <button onclick="show('collector',this)">🏛️ கலெக்டர்</button>
+    <button onclick="show('facilities',this)">🏗️ வசதிகள்</button>
+    <button onclick="show('gallery',this)">🖼 படங்கள்</button>
+    <button onclick="show('contact',this)">📩 தொடர்பு</button>
+  </nav>
+  <button class="notif-btn" onclick="show('contact')" title="கோரிக்கைகள்">
+    <span>🔔</span>
+    <div class="notif-count" id="notifCount" style="display:none;">0</div>
+  </button>
+</div>
+
+<div class="mbar">
+  <div class="mlbl">📢 சமீபத்திய செய்தி</div>
+  <div class="mtrack"><div class="mcontent" id="marqueeContent">
+    <span class="mitem">54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை – 26.01.2026 கிராம சபை தீர்மானம் நிறைவேற்றப்பட்டது</span>
+    <span class="mitem">அடுத்த கிராம சபை கூட்டம் விரைவில் – அனைத்து மக்களும் பங்கேற்கவும்</span>
+    <span class="mitem">54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை – 26.01.2026 கிராம சபை தீர்மானம் நிறைவேற்றப்பட்டது</span>
+    <span class="mitem">அடுத்த கிராம சபை கூட்டம் விரைவில் – அனைத்து மக்களும் பங்கேற்கவும்</span>
+  </div></div>
+</div>
+
+<div class="overlay" id="ov" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dnav">
+    <button onclick="show('home',this);closeDrawer()"><span class="dicon">🏠</span>முகப்பு</button>
+    <button onclick="show('news',this);closeDrawer()"><span class="dicon">📢</span>அறிவிப்புகள்</button>
+    <button onclick="show('history',this);closeDrawer()"><span class="dicon">📜</span>வரலாறு</button>
+    <button onclick="show('leaders',this);closeDrawer()"><span class="dicon">👤</span>தலைவர்கள்</button>
+    <button onclick="show('collector',this);closeDrawer()"><span class="dicon">🏛️</span>கலெக்டர்</button>
+    <button onclick="show('hospital',this);closeDrawer()"><span class="dicon">🏥</span>மருத்துவமனை</button>
+    <button onclick="show('facilities',this);closeDrawer()"><span class="dicon">🏗️</span>வசதிகள் & புகார்</button>
+    <button onclick="show('gallery',this);closeDrawer()"><span class="dicon">🖼</span>படங்கள்</button>
+    <button onclick="show('contact',this);closeDrawer()"><span class="dicon">📩</span>தொடர்பு</button>
+    <button onclick="show('admin',this);closeDrawer()" class="dadmin" id="adminMenuBtn" style="display:none;"><span class="dicon">🔐</span>Admin Panel <span id="drawerCount" style="background:#e53935;color:#fff;border-radius:99px;padding:0 5px;font-size:.65rem;margin-left:4px;display:none;">0</span></button>
+  </div>
+</div>
+
+<!-- ════ முகப்பு ════ -->
+<section id="home" class="active">
+  <div class="hero">
+    <div class="hero-badge">தமிழ்நாடு · மயிலாடுதுறை மாவட்டம்</div>
+    <div style="font-family:'Noto Serif Tamil',serif;font-size:.9rem;color:rgba(255,255,255,.7);margin-bottom:.3rem;">நம் ஊர் · நம் பெருமை</div>
+    <h1><span>54</span> எரவாஞ்சேரி கிராமம்</h1>
+    <div class="hero-loc">📍 தரங்கம்பாடி வட்டம்</div>
+    <div class="hero-loc2">மயிலாடுதுறை மாவட்டம், தமிழ்நாடு</div>
+    <div class="hstats">
+      <div class="hstat"><div class="hstat-n">54</div><div class="hstat-l">கிராம எண்</div></div>
+      <div class="hstat"><div class="hstat-n">~1200</div><div class="hstat-l">மக்கள்</div></div>
+      <div class="hstat"><div class="hstat-n">3</div><div class="hstat-l">வார்டுகள்</div></div>
+      <div class="hstat"><div class="hstat-n">2</div><div class="hstat-l">பள்ளிகள்</div></div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="ucard">
+      <div class="uhead"><div class="udot"></div><span>சமீபத்திய கிராம சபை தீர்மானம்</span></div>
+      <div style="padding:1rem;">
+        <div style="display:inline-block;background:#e8f5ee;color:#1a6b3c;border-radius:99px;padding:.18rem .65rem;font-size:.65rem;font-weight:700;margin-bottom:.45rem;border:1px solid #b8d4c8;">✅ தீர்மானம் நிறைவேற்றப்பட்டது</div>
+        <div style="font-size:.68rem;color:var(--mu);margin-bottom:.3rem;">📅 26.01.2026 – குடியரசு நாள் கிராம சபை</div>
+        <div style="font-size:.95rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;line-height:1.5;margin-bottom:.4rem;">54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி — பெயர் மாற்றம் கோரிக்கை</div>
+        <div style="font-size:.82rem;color:#444;line-height:1.8;">கிராம சபை கூட்டத்தில் மேலக்காலனி மற்றும் கீழக்காலனி பகுதிகளுக்கு தனி அடையாளப் பெயர் மாற்றம் கோரும் தீர்மானம் ஒருமனதாக நிறைவேற்றப்பட்டது.</div>
+      </div>
+    </div>
+    <div style="font-size:.88rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;margin-bottom:.5rem;">விரைவு இணைப்புகள் <span style="font-size:.72rem;color:var(--mu);font-weight:400;">— கிளிக் செய்யுங்கள்</span></div>
+    <div class="qgrid">
+      <div class="qbtn" onclick="show('news')"><span class="qi">📢</span><span class="ql">அறிவிப்புகள்</span><span class="qa">செய்திகள் பார்க்க</span></div>
+      <div class="qbtn" onclick="show('collector')"><span class="qi">🏛️</span><span class="ql">கலெக்டர்</span><span class="qa">தொடர்பு கொள்ள</span></div>
+      <div class="qbtn" onclick="show('hospital')"><span class="qi">🏥</span><span class="ql">மருத்துவம்</span><span class="qa">அவசர உதவி</span></div>
+      <div class="qbtn" onclick="show('leaders')"><span class="qi">👤</span><span class="ql">தலைவர்கள்</span><span class="qa">தொடர்பு எண்</span></div>
+      <div class="qbtn" onclick="show('facilities')"><span class="qi">🏗️</span><span class="ql">வசதிகள்</span><span class="qa">புகார் எண்கள்</span></div>
+      <div class="qbtn" onclick="show('contact')"><span class="qi">📩</span><span class="ql">கோரிக்கை</span><span class="qa">நிர்வாகியிடம்</span></div>
+    </div>
+    <div class="igrid">
+      <div class="iitem"><div class="il">கிராமம்</div><div class="iv">எரவாஞ்சேரி (54)</div></div>
+      <div class="iitem"><div class="il">வட்டம்</div><div class="iv">தரங்கம்பாடி</div></div>
+      <div class="iitem"><div class="il">மாவட்டம்</div><div class="iv">மயிலாடுதுறை</div></div>
+      <div class="iitem"><div class="il">மாநிலம்</div><div class="iv">தமிழ்நாடு</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ அறிவிப்புகள் ════ -->
+<section id="news">
+  <div class="container">
+    <div class="sec-hd">அறிவிப்புகள்</div>
+    <div class="sec-sub">புதிய தகவல்கள்</div>
+    <div class="divider"></div>
+    <div id="annList"><div class="loading">ஏற்றுகிறது...</div></div>
+  </div>
+</section>
+
+<!-- ════ வரலாறு ════ -->
+<section id="history">
+  <div class="container">
+    <div class="sec-hd">கிராம வரலாறு</div>
+    <div class="sec-sub">நம் கிராமத்தின் பெருமை</div>
+    <div class="divider"></div>
+    <div class="card card-g"><h3>எரவாஞ்சேரி பற்றி</h3><p>எரவாஞ்சேரி (54) என்பது தமிழ்நாட்டின் மயிலாடுதுறை மாவட்டம், தரங்கம்பாடி வட்டத்தில் அமைந்த வளமான விவசாய கிராமம். மேலக்காலனி மற்றும் கீழக்காலனி என்று இரண்டு பிரிவுகளாக அமைந்துள்ளது.</p></div>
+    <div class="card card-g"><h3>விவசாயம்</h3><p>நெல், கரும்பு மற்றும் வாழை ஆகியவை முக்கிய பயிர்கள். காவிரி டெல்டா வளமான மண்ணில் பல தலைமுறைகளாக விவசாயம் செய்கின்றனர்.</p></div>
+    <div class="card card-g"><h3>கோயில்கள் மற்றும் கலாச்சாரம்</h3><p>தொன்மையான கோயில்கள் சமூகத்தின் ஆன்மீக மையம். பொங்கல், தை பூசம் விழாக்கள் சிறப்பாக கொண்டாடப்படுகின்றன. சிறு கிரிக்கெட் போட்டிகளும் நடைபெறுகின்றன.</p></div>
+  </div>
+</section>
+
+<!-- ════ தலைவர்கள் ════ -->
+<section id="leaders">
+  <div class="container">
+    <div class="sec-hd">கிராம தலைவர்கள்</div>
+    <div class="sec-sub">தொடர்பு தகவல்கள்</div>
+    <div class="divider"></div>
+    <div class="lgrid" id="leaderList"><div class="loading">ஏற்றுகிறது...</div></div>
+    <div class="card" style="margin-top:.85rem;">
+      <div style="font-size:.92rem;font-weight:600;color:var(--g);font-family:'Noto Serif Tamil',serif;margin-bottom:.75rem;">கிராம அலுவலக தொடர்பு</div>
+      <div style="display:flex;gap:.65rem;padding:.5rem 0;border-bottom:1px solid #f0f0f0;font-size:.8rem;"><span style="color:var(--mu);min-width:80px;font-size:.72rem;font-weight:600;">கிராமம்</span><span>54 எரவாஞ்சேரி</span></div>
+      <div style="display:flex;gap:.65rem;padding:.5rem 0;border-bottom:1px solid #f0f0f0;font-size:.8rem;"><span style="color:var(--mu);min-width:80px;font-size:.72rem;font-weight:600;">வட்டம்</span><span>தரங்கம்பாடி</span></div>
+      <div style="display:flex;gap:.65rem;padding:.5rem 0;font-size:.8rem;"><span style="color:var(--mu);min-width:80px;font-size:.72rem;font-weight:600;">அவசரம்</span><span>காவல்: 100 · தீ: 101 · ஆம்புலன்ஸ்: 108</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ கலெக்டர் ════ -->
+<section id="collector">
+  <div class="container">
+    <div class="sec-hd">மாவட்ட கலெக்டர்</div>
+    <div class="sec-sub">மயிலாடுதுறை மாவட்டம்</div>
+    <div class="divider"></div>
+    <div class="colcard">
+      <div class="colhead">
+        <div class="colphoto">👤</div>
+        <div style="color:#ffd96b;font-size:.65rem;background:rgba(255,255,255,.15);border-radius:99px;padding:.2rem .7rem;display:inline-block;margin-bottom:.5rem;font-family:'Noto Serif Tamil',serif;">📸 புகைப்படம் சேர்க்கவும்</div>
+        <div style="color:#fff;font-size:1rem;font-weight:700;font-family:'Noto Serif Tamil',serif;margin-bottom:.2rem;">[பெயர் சேர்க்கவும்]</div>
+        <div style="color:rgba(255,255,255,.75);font-size:.75rem;">மாவட்ட கலெக்டர், மயிலாடுதுறை</div>
+      </div>
+      <div class="colbody">
+        <div class="crow"><div class="cicon" style="background:var(--gl);">📞</div><div><span style="font-size:.68rem;color:var(--mu);display:block;">தொலைபேசி</span><span style="font-size:.85rem;font-weight:500;color:var(--bl);">04364 - XXXXXX</span></div></div>
+        <div class="crow"><div class="cicon" style="background:#e8f0fb;">✉️</div><div><span style="font-size:.68rem;color:var(--mu);display:block;">மின்னஞ்சல்</span><span style="font-size:.82rem;font-weight:500;color:var(--bl);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8eede1e2e2ebedfae1fca0e3f7e2efeafbfae6fbfcefe7cefae0a0e9e1f8a0e7e0">[email&#160;protected]</a></span></div></div>
+        <div class="crow"><div class="cicon" style="background:var(--gol);">🏛️</div><div><span style="font-size:.68rem;color:var(--mu);display:block;">அலுவலகம்</span><span style="font-size:.82rem;font-weight:500;">மாவட்ட ஆட்சியர் அலுவலகம், மயிலாடுதுறை</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ மருத்துவமனை ════ -->
+<section id="hospital">
+  <div class="container">
+    <div class="sec-hd">அருகில் உள்ள மருத்துவமனைகள்</div>
+    <div class="sec-sub">அவசர சிகிச்சை தகவல்கள்</div>
+    <div class="divider"></div>
+    <div style="background:#fde8e8;border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;border:1px solid #f5b8b8;">
+      <span style="font-size:1.1rem;">🚨</span>
+      <div style="font-size:.8rem;color:var(--re);font-weight:600;font-family:'Noto Serif Tamil',serif;">அவசர நிலை: 108 (ஆம்புலன்ஸ்) · 104 (மருத்துவ உதவி)</div>
+    </div>
+    <div class="hcard" style="border:2px solid var(--gm);">
+      <div style="background:var(--g);padding:.4rem 1rem;font-size:.68rem;font-weight:700;color:#ffd96b;font-family:'Noto Serif Tamil',serif;display:flex;align-items:center;gap:.4rem;"><div class="udot"></div>மிக அருகில் — முதல் செல்லுங்கள்!</div>
+      <div class="hcard-h"><div class="hcard-icon" style="background:var(--gl);">🏨</div><div><div style="font-size:.92rem;font-weight:600;font-family:'Noto Serif Tamil',serif;">ஆரம்ப சுகாதார நிலையம் (PHC)</div><div style="font-size:.72rem;color:var(--mu);">தூரம்: ~2 கி.மீ</div></div></div>
+      <div class="tags"><span class="tag topen">✅ திறந்திருக்கும்</span><span class="tag ttime">⏰ காலை 8 – மாலை 4</span></div>
+      <div style="font-size:.78rem;color:var(--bl);padding:0 1rem .85rem;">📞 +91 XXXXX XXXXX</div>
+    </div>
+    <div class="hcard">
+      <div class="hcard-h"><div class="hcard-icon" style="background:#fde8e8;">🏥</div><div><div style="font-size:.92rem;font-weight:600;font-family:'Noto Serif Tamil',serif;">அரசு மருத்துவமனை, தரங்கம்பாடி</div><div style="font-size:.72rem;color:var(--mu);">தூரம்: ~5 கி.மீ</div></div></div>
+      <div class="tags"><span class="tag topen">✅ திறந்திருக்கும்</span><span class="tag t24">24 மணி நேரம்</span><span class="tag temer">🚨 அவசர சிகிச்சை</span></div>
+      <div style="font-size:.78rem;color:var(--bl);padding:0 1rem .85rem;">📞 04364 - XXXXXX</div>
+    </div>
+    <div class="hcard">
+      <div class="hcard-h"><div class="hcard-icon" style="background:#fde8e8;">🏥</div><div><div style="font-size:.92rem;font-weight:600;font-family:'Noto Serif Tamil',serif;">அரசு மருத்துவமனை, மயிலாடுதுறை</div><div style="font-size:.72rem;color:var(--mu);">தூரம்: ~10 கி.மீ</div></div></div>
+      <div class="tags"><span class="tag topen">✅ திறந்திருக்கும்</span><span class="tag t24">24 மணி நேரம்</span><span class="tag temer">🚨 அவசர சிகிச்சை</span><span class="tag tspec">🩺 நிபுணர் சிகிச்சை</span></div>
+      <div style="font-size:.78rem;color:var(--bl);padding:0 1rem .85rem;">📞 04364 - XXXXXX</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ வசதிகள் ════ -->
+<section id="facilities">
+  <div class="container">
+    <div class="sec-hd">கிராம வசதிகள் & புகார் தொடர்பு</div>
+    <div class="sec-sub">தற்போதைய நிலை</div>
+    <div class="divider"></div>
+    <div class="fgrid" id="facilityList"><div class="loading">ஏற்றுகிறது...</div></div>
+    <div style="margin-top:1.5rem;font-size:.95rem;font-weight:700;color:var(--tx);font-family:'Noto Serif Tamil',serif;margin-bottom:.75rem;">⚡ பிரச்சினை? இங்கே தொடர்பு கொள்ளுங்கள்</div>
+    <!-- Water -->
+    <div style="background:#fff;border-radius:14px;border:1px solid #e0e8e3;margin-bottom:.85rem;overflow:hidden;">
+      <div style="background:#e8f0fb;padding:.55rem 1rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid #d0ddf5;"><span style="font-size:18px;">💧</span><span style="font-size:.82rem;font-weight:700;color:#1565c0;font-family:'Noto Serif Tamil',serif;">குடிநீர் வழங்கல் புகார்</span></div>
+      <div style="padding:.85rem 1rem;font-size:.82rem;color:var(--tx);line-height:1.9;">
+        <div>🏢 TWAD வாரியம், மயிலாடுதுறை</div>
+        <div>📞 <strong style="color:var(--bl);">04364 - XXXXXX</strong></div>
+        <div>☎️ Toll Free: <strong style="color:var(--bl);">1916</strong></div>
+      </div>
+    </div>
+    <!-- Power -->
+    <div style="background:#fff;border-radius:14px;border:1px solid #e0e8e3;margin-bottom:.85rem;overflow:hidden;">
+      <div style="background:#fdf3dc;padding:.55rem 1rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid #f0dfa0;"><span style="font-size:18px;">⚡</span><span style="font-size:.82rem;font-weight:700;color:#7a5800;font-family:'Noto Serif Tamil',serif;">மின்சாரம் பிரச்சினை புகார்</span></div>
+      <div style="padding:.85rem 1rem;font-size:.82rem;color:var(--tx);line-height:1.9;">
+        <div>🏢 TANGEDCO, தரங்கம்பாடி வட்டம்</div>
+        <div>📞 <strong style="color:var(--gold);">04364 - XXXXXX</strong></div>
+        <div>☎️ Toll Free: <strong style="color:var(--gold);">1912</strong></div>
+      </div>
+    </div>
+    <!-- Police -->
+    <div style="background:#fff;border-radius:14px;border:1px solid #e0e8e3;margin-bottom:.85rem;overflow:hidden;">
+      <div style="background:#fde8e8;padding:.55rem 1rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid #f5c0c0;"><span style="font-size:18px;">🚔</span><span style="font-size:.82rem;font-weight:700;color:#8b1a1a;font-family:'Noto Serif Tamil',serif;">பெரம்பூர் காவல் நிலையம்</span></div>
+      <div style="padding:.85rem 1rem;font-size:.82rem;color:var(--tx);line-height:1.9;">
+        <div>📍 தூரம்: ~5 கி.மீ</div>
+        <div>📞 <strong style="color:var(--re);">04364 - XXXXXX</strong></div>
+        <div>☎️ அவசர எண்: <strong style="color:var(--re);">100</strong></div>
+      </div>
+    </div>
+    <!-- Summary -->
+    <div style="background:var(--g);border-radius:14px;padding:1rem;margin-top:.5rem;">
+      <div style="font-size:.82rem;font-weight:700;color:#ffd96b;font-family:'Noto Serif Tamil',serif;margin-bottom:.75rem;">📋 அனைத்து முக்கிய எண்கள்</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;">
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.5rem;text-align:center;"><div style="font-size:.62rem;color:rgba(255,255,255,.65);">💧 குடிநீர்</div><div style="font-size:.95rem;font-weight:700;color:#ffd96b;">1916</div></div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.5rem;text-align:center;"><div style="font-size:.62rem;color:rgba(255,255,255,.65);">⚡ மின்சாரம்</div><div style="font-size:.95rem;font-weight:700;color:#ffd96b;">1912</div></div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.5rem;text-align:center;"><div style="font-size:.62rem;color:rgba(255,255,255,.65);">🚔 காவல்</div><div style="font-size:.95rem;font-weight:700;color:#ffd96b;">100</div></div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.5rem;text-align:center;"><div style="font-size:.62rem;color:rgba(255,255,255,.65);">🚑 ஆம்புலன்ஸ்</div><div style="font-size:.95rem;font-weight:700;color:#ffd96b;">108</div></div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.5rem;text-align:center;"><div style="font-size:.62rem;color:rgba(255,255,255,.65);">🔥 தீ</div><div style="font-size:.95rem;font-weight:700;color:#ffd96b;">101</div></div>
+        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:.5rem;text-align:center;"><div style="font-size:.62rem;color:rgba(255,255,255,.65);">🏥 மருத்துவம்</div><div style="font-size:.95rem;font-weight:700;color:#ffd96b;">104</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ படங்கள் ════ -->
+<section id="gallery">
+  <div class="container">
+    <div class="sec-hd">படங்கள்</div>
+    <div class="sec-sub">கிராம படத்தொகுப்பு</div>
+    <div class="divider"></div>
+    <div class="ggrid" id="galleryList"><div class="loading">ஏற்றுகிறது...</div></div>
+    <div style="margin-top:1rem;background:var(--gl);border-radius:11px;padding:.9rem;border:1px dashed var(--gm);text-align:center;font-size:.8rem;color:var(--g);font-weight:600;font-family:'Noto Serif Tamil',serif;">📸 Admin login → படங்கள் பக்கம் → "படம் சேர்க்க" button</div>
+  </div>
+</section>
+
+<!-- ════ தொடர்பு ════ -->
+<section id="contact">
+  <div class="container">
+    <div class="sec-hd">தொடர்பு கொள்ளுங்கள்</div>
+    <div class="sec-sub">கோரிக்கை அனுப்புங்கள்</div>
+    <div class="divider"></div>
+    <div class="form-sec">
+      <div class="form-head"><span>📩 நிர்வாகியிடம் கோரிக்கை அனுப்புங்கள்</span></div>
+      <div class="form-body">
+        <div style="font-size:.82rem;font-weight:600;color:var(--tx);margin-bottom:.6rem;font-family:'Noto Serif Tamil',serif;">கோரிக்கை வகை:</div>
+        <div class="req-type" id="reqTypes">
+          <div class="rtype sel" onclick="selType(this,'செய்தி புதுப்பிப்பு')"><div class="rti">📢</div><div class="rtl">செய்தி</div></div>
+          <div class="rtype" onclick="selType(this,'படம் சேர்க்க')"><div class="rti">📸</div><div class="rtl">படம்</div></div>
+          <div class="rtype" onclick="selType(this,'வசதி மாற்றம்')"><div class="rti">🏗️</div><div class="rtl">வசதி</div></div>
+          <div class="rtype" onclick="selType(this,'பொது கோரிக்கை')"><div class="rti">📝</div><div class="rtl">பொது</div></div>
+        </div>
+        <input type="hidden" id="selReqType" value="செய்தி புதுப்பிப்பு">
+        <div class="field"><label>உங்கள் பெயர் *</label><input type="text" id="rName" placeholder="பெயர்"></div>
+        <div class="field"><label>தொலைபேசி</label><input type="tel" id="rPhone" placeholder="+91 XXXXX XXXXX"></div>
+        <div class="field"><label>கோரிக்கை விளக்கம் *</label><textarea id="rMsg" placeholder="விளக்கமாக எழுதுங்கள்..."></textarea></div>
+        <button class="sbtn" onclick="submitReq()">📨 கோரிக்கை அனுப்பு</button>
+        <div class="success-msg" id="successMsg">✅ கோரிக்கை சேர்க்கப்பட்டது! <span id="emailStatus"></span></div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--bl);">
+      <h3 style="color:var(--bl);">நேரடி தொடர்பு</h3>
+      <div style="font-size:.82rem;color:#444;line-height:2;">
+        <div>📞 <a href="tel:+918608287793" style="color:#1565c0;font-weight:600;text-decoration:none;">+91 8608287793</a></div>
+        <div>💬 <a href="https://wa.me/918608287793?text=வணக்கம்! 54 எரவாஞ்சேரி கிராம இணையதளம் வழியாக தொடர்பு கொள்கிறேன்." target="_blank" style="color:#25D366;font-weight:600;text-decoration:none;">WhatsApp: 8608287793</a></div>
+        <div>✉️ <strong>aruncse34@gmail.com</strong></div>
+        <div style="font-size:.75rem;color:var(--mu);margin-top:.3rem;">கோரிக்கைகளுக்கு 24-48 மணி நேரத்தில் பதில் வரும்.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ ADMIN PANEL ════ -->
+<section id="admin">
+  <div class="container">
+    <div class="sec-hd">Admin Panel</div>
+    <div class="sec-sub">நிர்வாக பலகை</div>
+    <div class="divider"></div>
+
+    <div id="adminLocked">
+      <div style="background:#fff;border-radius:14px;border:1px solid #e0e8e3;padding:1.5rem;text-align:center;margin-bottom:1rem;">
+        <div style="font-size:2.5rem;margin-bottom:.5rem;">🔐</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--g);font-family:'Noto Serif Tamil',serif;margin-bottom:.4rem;">PIN உள்ளிடுங்கள்</div>
+        <div class="pin-input">
+          <input type="password" maxlength="1" id="p1" oninput="np(this,'p2')" onkeydown="pk(event,this,null,'p2')">
+          <input type="password" maxlength="1" id="p2" oninput="np(this,'p3')" onkeydown="pk(event,this,'p1','p3')">
+          <input type="password" maxlength="1" id="p3" oninput="np(this,'p4')" onkeydown="pk(event,this,'p2','p4')">
+          <input type="password" maxlength="1" id="p4" oninput="cp()" onkeydown="pk(event,this,'p3',null)">
+        </div>
+        <div id="pinErr" style="font-size:.78rem;color:var(--re);display:none;font-family:'Noto Serif Tamil',serif;">PIN தவறானது.</div>
+        <div style="font-size:.72rem;color:var(--mu);margin-top:.5rem;">இயல்புநிலை PIN: 1234</div>
+      </div>
+    </div>
+
+    <div id="adminUnlocked" style="display:none;">
+      <div class="admin-badge">
+        <span>🟢 Admin mode — real-time update செய்யலாம்!</span>
+        <button onclick="adminLogout()" style="margin-left:auto;background:none;border:1px solid var(--gm);border-radius:6px;padding:.25rem .65rem;font-size:.72rem;cursor:pointer;color:var(--g);font-family:'Noto Sans Tamil',sans-serif;">வெளியேறு</button>
+      </div>
+
+      <!-- Marquee CMS -->
+      <div class="admin-sec">
+        <div class="admin-sec-head"><span>📢 Marquee ஓடும் செய்தி மாற்றவும்</span></div>
+        <div class="admin-sec-body">
+          <div id="marqueeEditList" style="margin-bottom:.75rem;"></div>
+          <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
+            <input type="text" id="newMarqueeText" placeholder="புதிய ஓடும் செய்தி உள்ளிடுங்கள்..." style="flex:1;border:1.5px solid #dde4e0;border-radius:8px;padding:.6rem .8rem;font-size:.83rem;font-family:'Noto Sans Tamil',sans-serif;outline:none;color:var(--tx);">
+            <button onclick="addMarqueeItem()" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:.6rem 1rem;font-size:.82rem;cursor:pointer;white-space:nowrap;font-family:'Noto Serif Tamil',serif;">+ சேர்</button>
+          </div>
+          <button class="sbtn" onclick="saveMarquee()">💾 Marquee சேமிக்கவும்</button>
+          <div id="marqueeSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ Marquee புதுப்பிக்கப்பட்டது!</div>
+        </div>
+      </div>
+
+      <!-- Add Announcement -->
+      <div class="admin-sec">
+        <div class="admin-sec-head"><span>📢 புதிய அறிவிப்பு சேர்க்கவும்</span></div>
+        <div class="admin-sec-body">
+          <div class="field"><label>தலைப்பு *</label><input type="text" id="annTitle" placeholder="அறிவிப்பு தலைப்பு"></div>
+          <div class="field"><label>விளக்கம் *</label><textarea id="annDesc" placeholder="விரிவான விளக்கம்..."></textarea></div>
+          <div class="field">
+            <label>வகை</label>
+            <select id="annType">
+              <option value="புதியது">📣 புதியது</option>
+              <option value="அறிவிப்பு">📢 அறிவிப்பு</option>
+              <option value="நிகழ்வு">🎉 நிகழ்வு</option>
+              <option value="அவசரம்">🚨 அவசரம்</option>
+            </select>
+          </div>
+          <button class="sbtn" onclick="addAnnouncement()">✅ அறிவிப்பு சேர்க்க</button>
+          <div id="annSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ அறிவிப்பு சேர்க்கப்பட்டது!</div>
+        </div>
+      </div>
+
+      <!-- Upload Image -->
+      <div class="admin-sec">
+        <div class="admin-sec-head"><span>📸 படம் upload செய்யவும்</span></div>
+        <div class="admin-sec-body">
+          <div class="field">
+            <label>படம் தேர்வு செய்யுங்கள் (Camera அல்லது Gallery)</label>
+            <input type="file" id="imgFile" accept="image/*" capture="environment" onchange="previewImg(this)">
+          </div>
+          <img id="imgPreview" class="img-preview">
+          <div class="field"><label>படத்தின் தலைப்பு *</label><input type="text" id="imgCaption" placeholder="உதா: கோயில் திருவிழா 2026"></div>
+          <button class="sbtn" onclick="uploadImage()" id="uploadBtn">📤 Gallery-ல் சேர்க்க</button>
+          <div id="uploadProgress" style="display:none;margin-top:.6rem;background:#e8f0fb;border-radius:8px;padding:.6rem;text-align:center;font-size:.82rem;color:var(--bl);font-family:'Noto Serif Tamil',serif;">⏳ Upload ஆகிறது...</div>
+          <div id="uploadSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ படம் gallery-ல் சேர்க்கப்பட்டது!</div>
+        </div>
+      </div>
+
+      <!-- Edit Leaders -->
+      <div class="admin-sec">
+        <div class="admin-sec-head"><span>👤 தலைவர் தகவல் மாற்றவும்</span></div>
+        <div class="admin-sec-body">
+          <div class="field">
+            <label>தலைவர் தேர்வு</label>
+            <select id="leaderSelect" onchange="loadLeaderEdit()">
+              <option value="">-- தேர்வு செய்யுங்கள் --</option>
+            </select>
+          </div>
+          <div id="leaderEditForm" style="display:none;">
+            <div class="field"><label>பெயர்</label><input type="text" id="leaderName" placeholder="தலைவர் பெயர்"></div>
+            <div class="field"><label>தொலைபேசி</label><input type="tel" id="leaderPhone" placeholder="+91 XXXXX XXXXX"></div>
+            <div class="field">
+              <label>புகைப்படம் (Camera)</label>
+              <input type="file" id="leaderPhoto" accept="image/*" capture="environment" onchange="previewLeaderPhoto(this)">
+            </div>
+            <img id="leaderPhotoPreview" class="img-preview">
+            <button class="sbtn" onclick="saveLeader()">💾 சேமிக்கவும்</button>
+            <div id="leaderSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ தலைவர் தகவல் புதுப்பிக்கப்பட்டது!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Facilities -->
+      <div class="admin-sec">
+        <div class="admin-sec-head"><span>🏗️ வசதி நிலை மாற்றவும்</span></div>
+        <div class="admin-sec-body">
+          <div id="facilityEditList"><div class="loading">ஏற்றுகிறது...</div></div>
+          <button class="sbtn" onclick="saveFacilities()" style="margin-top:.75rem;">💾 அனைத்தையும் சேமிக்கவும்</button>
+          <div id="facSuccess" style="display:none;background:#dcf5e8;border-radius:8px;padding:.6rem;text-align:center;margin-top:.6rem;font-size:.82rem;color:#1a6b3c;font-family:'Noto Serif Tamil',serif;">✅ வசதி நிலை புதுப்பிக்கப்பட்டது!</div>
+        </div>
+      </div>
+
+      <!-- Requests -->
+      <div class="admin-sec">
+        <div class="admin-sec-head"><span>📩 வரும் கோரிக்கைகள் <span id="adminReqCount" style="background:#e53935;color:#fff;border-radius:99px;padding:0 5px;font-size:.62rem;margin-left:4px;display:none;">0</span></span></div>
+        <div class="admin-sec-body">
+          <div id="reqList"><div class="no-req">📭 கோரிக்கைகள் இல்லை</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════ FLOATING BUTTONS ════ -->
+<div class="float-btns" id="floatBtns">
+  <div style="position:relative;">
+    <button class="float-btn float-wa" onclick="openWhatsApp()" title="WhatsApp">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <span class="float-label">WhatsApp</span>
+    </button>
+  </div>
+  <div style="position:relative;">
+    <button class="float-btn float-call" onclick="openCall()" title="அழைக்கவும்">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+      <span class="float-label">அழைக்கவும்</span>
+    </button>
+  </div>
+</div>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <strong>54 எரவாஞ்சேரி கிராமம்</strong><br>
+  தரங்கம்பாடி வட்டம், மயிலாடுதுறை மாவட்டம், தமிழ்நாடு
+  <div class="femerg">
+    <span>🚨 காவல்: 100</span>
+    <span>🔥 தீ: 101</span>
+    <span>🚑 ஆம்புலன்ஸ்: 108</span>
+    <span>🏥 மருத்துவம்: 104</span>
+  </div>
+</footer>
+
+<div class="bnav" id="bnav">
+  <button class="active" onclick="show('home',this)"><span class="bi">🏠</span>முகப்பு</button>
+  <button onclick="show('news',this)"><span class="bi">📢</span>செய்தி</button>
+  <button onclick="show('collector',this)"><span class="bi">🏛️</span>கலெக்டர்</button>
+  <button onclick="show('hospital',this)"><span class="bi">🏥</span>மருத்துவம்</button>
+  <button onclick="show('facilities',this)"><span class="bi">🏗️</span>வசதிகள்</button>
+</div>
+
+</div><!-- /appMain -->
+
+<!-- ════ MODALS ════ -->
+<div class="modal-wrap" id="leaderModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('leaderModal')">✕</button>
+    <h3>தலைவர் தகவல் திருத்தம்</h3>
+    <div id="leaderModalBody"></div>
+  </div>
+</div>
+
+<script>
+// ══ CONFIG ══
+const FORMSPREE_ID = 'xeerlkyp';
+const ADMIN_EMAIL  = 'aruncse34@gmail.com';
+const ADMIN_PHONE  = '+91 8608287793';
+const WHATSAPP_NUM = '918608287793';
+
+// ── WhatsApp & Call ──
+window.openWhatsApp = function() {
+  const num = WHATSAPP_NUM.replace(/\D/g,'');
+  const msg = encodeURIComponent('வணக்கம்! 54 எரவாஞ்சேரி கிராம இணையதளம் வழியாக தொடர்பு கொள்கிறேன்.');
+  window.open('https://wa.me/' + num + '?text=' + msg, '_blank');
+};
+
+window.openCall = function() {
+  window.location.href = 'tel:' + ADMIN_PHONE.replace(/\s/g,'');
+};
+
+// Show admin phone on contact page
+document.addEventListener('DOMContentLoaded', () => {
+  const pd = document.getElementById('adminPhoneDisplay');
+  if (pd) pd.textContent = ADMIN_PHONE;
+  initMarquee();
+});
+
+// ══ MARQUEE CMS ══
+const DEFAULT_MARQUEE = [
+  '54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை – 26.01.2026 கிராம சபை தீர்மானம் நிறைவேற்றப்பட்டது',
+  'அடுத்த கிராம சபை கூட்டம் விரைவில் – அனைத்து மக்களும் பங்கேற்கவும்'
+];
+function getMarqueeItems() {
+  try { return JSON.parse(localStorage.getItem('marquee_items') || 'null') || DEFAULT_MARQUEE; } catch { return DEFAULT_MARQUEE; }
+}
+function saveMarqueeItems(items) { try { localStorage.setItem('marquee_items', JSON.stringify(items)); } catch {} }
+function updateMarqueeDom(items) {
+  const el = document.getElementById('marqueeContent');
+  if (!el || !items.length) return;
+  el.innerHTML = [...items, ...items].map(t => `<span class="mitem">${t}</span>`).join('');
+}
+function initMarquee() { updateMarqueeDom(getMarqueeItems()); }
+window.renderMarqueeEdit = function() {
+  const el = document.getElementById('marqueeEditList');
+  if (!el) return;
+  const items = getMarqueeItems();
+  if (!items.length) { el.innerHTML = '<div style="font-size:.78rem;color:var(--mu);padding:.5rem 0;font-family:\'Noto Serif Tamil\',serif;">செய்திகள் இல்லை</div>'; return; }
+  el.innerHTML = items.map((item,i) => `
+    <div style="display:flex;align-items:flex-start;gap:.5rem;padding:.5rem 0;border-bottom:1px solid #f0f0f0;">
+      <div style="font-size:.78rem;flex:1;color:var(--tx);line-height:1.5;">${item}</div>
+      <button onclick="removeMarqueeItem(${i})" style="background:#fde8e8;border:none;border-radius:6px;padding:.2rem .5rem;font-size:.7rem;cursor:pointer;color:var(--re);flex-shrink:0;">🗑</button>
+    </div>`).join('');
+}
+window.addMarqueeItem = function() {
+  const inp = document.getElementById('newMarqueeText');
+  const text = inp.value.trim();
+  if (!text) { alert('செய்தி உள்ளிடுங்கள்!'); return; }
+  const items = getMarqueeItems(); items.push(text); saveMarqueeItems(items);
+  inp.value = ''; renderMarqueeEdit();
+}
+window.removeMarqueeItem = function(idx) {
+  const items = getMarqueeItems(); items.splice(idx,1); saveMarqueeItems(items); renderMarqueeEdit();
+}
+window.saveMarquee = function() {
+  updateMarqueeDom(getMarqueeItems());
+  const s = document.getElementById('marqueeSuccess');
+  s.style.display = 'block'; setTimeout(() => s.style.display = 'none', 3000);
+}
+
+const ADMIN_MOBILE = '9999999999';
+const ADMIN_PIN = '1234';
+let currentOTP = '', cdInterval = null;
+window._announcements = [];
+window._gallery = [];
+window._leaders = [];
+window._facilities = [];
+
+window.onPhoneInput = function() {
+  const v = document.getElementById('mobileInp').value;
+  const box = document.getElementById('phoneBox');
+  const ok = document.getElementById('phoneOk');
+  box.style.borderColor = v.length === 10 ? '#2d9e5a' : '#e0e8e3';
+  ok.style.display = v.length === 10 ? 'flex' : 'none';
+}
+
+window.sendOTP = function() {
+  const mob = document.getElementById('mobileInp').value.trim();
+  if (mob.length !== 10) { document.getElementById('err1').style.display = 'block'; return; }
+  document.getElementById('err1').style.display = 'none';
+  currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+  document.getElementById('sentTo').textContent = '+91 ' + mob + ' எண்ணுக்கு அனுப்பப்பட்டது';
+  document.getElementById('demoOTP').textContent = currentOTP;
+  document.getElementById('lstep1').classList.remove('active');
+  document.getElementById('lstep2').classList.add('active');
+  document.getElementById('o1').focus();
+  startCD();
+}
+
+function startCD() {
+  let s = 30;
+  const btn = document.getElementById('resendBtn');
+  btn.disabled = true;
+  document.getElementById('cdTimer').textContent = s;
+  if (cdInterval) clearInterval(cdInterval);
+  cdInterval = setInterval(() => {
+    s--;
+    const el = document.getElementById('cdTimer');
+    if (el) el.textContent = s;
+    if (s <= 0) { clearInterval(cdInterval); btn.disabled = false; btn.innerHTML = 'மீண்டும் அனுப்பு'; }
+  }, 1000);
+}
+
+window.resendOTP = function() {
+  currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+  document.getElementById('demoOTP').textContent = currentOTP;
+  ['o1','o2','o3','o4','o5','o6'].forEach(id => { const el = document.getElementById(id); el.value = ''; el.classList.remove('filled'); });
+  document.getElementById('err2').style.display = 'none';
+  document.getElementById('o1').focus();
+  document.getElementById('resendBtn').innerHTML = 'மீண்டும் அனுப்பு (<span id="cdTimer">30</span>s)';
+  startCD();
+}
+
+window.backStep = function() {
+  document.getElementById('lstep2').classList.remove('active');
+  document.getElementById('lstep1').classList.add('active');
+  if (cdInterval) clearInterval(cdInterval);
+}
+
+window.oi = function(el, nextId) {
+  el.value = el.value.replace(/\D/g, '');
+  el.classList.toggle('filled', !!el.value);
+  if (el.value && nextId) document.getElementById(nextId).focus();
+  const otp = ['o1','o2','o3','o4','o5','o6'].map(id => document.getElementById(id).value).join('');
+  if (otp.length === 6) setTimeout(verifyOTP, 200);
+}
+
+window.ok = function(e, el, prevId, nextId) {
+  if (e.key === 'Backspace' && !el.value && prevId) {
+    const p = document.getElementById(prevId); p.value = ''; p.classList.remove('filled'); p.focus();
+  }
+}
+
+window.verifyOTP = function() {
+  const entered = ['o1','o2','o3','o4','o5','o6'].map(id => document.getElementById(id).value).join('');
+  const mob = document.getElementById('mobileInp').value.trim();
+  if (entered === currentOTP) {
+    const isAdmin = mob === ADMIN_MOBILE;
+    try { localStorage.setItem('vill_auth', isAdmin ? 'admin' : 'user'); localStorage.setItem('vill_time', Date.now()); localStorage.setItem('vill_mobile', mob); } catch {}
+    launchApp(isAdmin);
+    if (cdInterval) clearInterval(cdInterval);
+  } else {
+    document.getElementById('err2').style.display = 'block';
+    ['o1','o2','o3','o4','o5','o6'].forEach(id => { const el = document.getElementById(id); el.value = ''; el.classList.remove('filled'); });
+    document.getElementById('o1').focus();
+  }
+}
+
+window.guestLogin = function() {
+  try { localStorage.setItem('vill_auth', 'guest'); localStorage.setItem('vill_time', Date.now()); } catch {}
+  launchApp(false);
+}
+
+window.launchApp = function(isAdmin) {
+  document.getElementById('appLogin').style.display = 'none';
+  document.getElementById('appMain').style.display = 'block';
+  if (isAdmin) {
+    document.getElementById('adminMenuBtn').style.display = 'flex';
+    document.body.classList.add('admin-mode');
+  }
+  if (typeof startFirebaseListeners === 'function') {
+    startFirebaseListeners();
+    if (typeof fbSeedDefaults === 'function') fbSeedDefaults();
+  } else {
+    loadFallbackData();
+  }
+  updateBadge();
+}
+
+window.checkAutoLogin = function() {
+  try {
+    const a = localStorage.getItem('vill_auth');
+    const t = parseInt(localStorage.getItem('vill_time') || '0');
+    const EXPIRY = 24 * 60 * 60 * 1000;
+    if (a && (Date.now() - t) < EXPIRY) {
+      launchApp(a === 'admin');
+    }
+  } catch {}
+}
+
+// ══ FALLBACK DATA (no Firebase) ══
+function loadFallbackData() {
+  window._announcements = [
+    { id: '1', title: '54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை', desc: 'கிராம சபை கூட்டத்தில் தீர்மானம் நிறைவேற்றப்பட்டது.', type: 'புதியது', time: Date.now() },
+    { id: '2', title: 'பிரதம மந்திரி கிசான் திட்டம் பதிவு', desc: 'தகுதியான விவசாயிகள் பதிவு செய்யலாம்.', type: 'அறிவிப்பு', time: Date.now() - 86400000 },
+  ];
+  window._leaders = [
+    { id: '1', role: 'கிராம தலைவர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 1 },
+    { id: '2', role: 'வார்டு உறுப்பினர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 2 },
+    { id: '3', role: 'பஞ்சாயத்து அலுவலர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 3 },
+  ];
+  window._facilities = [
+    { id: '1', name: 'குடிநீர்', icon: '💧', status: 'yes' },
+    { id: '2', name: 'மின்சாரம்', icon: '⚡', status: 'yes' },
+    { id: '3', name: 'தார் சாலை', icon: '🛣️', status: 'partial' },
+    { id: '4', name: 'பேருந்து வசதி', icon: '🚌', status: 'no' },
+    { id: '5', name: 'பள்ளி', icon: '🏫', status: 'yes' },
+    { id: '6', name: 'இணையம்', icon: '🌐', status: 'partial' },
+    { id: '7', name: 'வங்கி / ATM', icon: '🏦', status: 'partial' },
+    { id: '8', name: 'சாக்கடை', icon: '🚰', status: 'no' },
+  ];
+  window._gallery = [];
+  renderAnnouncements();
+  renderLeaders();
+  renderFacilities();
+  renderGallery();
+}
+
+// ══ RENDER FUNCTIONS ══
+window.renderAnnouncements = function() {
+  const el = document.getElementById('annList');
+  if (!el) return;
+  const list = window._announcements;
+  if (!list.length) { el.innerHTML = '<div class="no-req">📭 அறிவிப்புகள் இல்லை</div>'; return; }
+  const typeColor = { 'புதியது': 'bnew', 'அறிவிப்பு': 'bnotice', 'நிகழ்வு': 'bnew', 'அவசரம்': 'bnotice' };
+  const typeIcon = { 'புதியது': '🎉', 'அறிவிப்பு': '📢', 'நிகழ்வு': '🎊', 'அவசரம்': '🚨' };
+  const iconBg = { 'புதியது': 'var(--gl)', 'அறிவிப்பு': 'var(--gol)', 'நிகழ்வு': 'var(--gl)', 'அவசரம்': '#fde8e8' };
+  el.innerHTML = list.map(a => `
+    <div class="ann-card">
+      <div class="a-icon" style="background:${iconBg[a.type]||'var(--gl)'};">${typeIcon[a.type]||'📢'}</div>
+      <div style="flex:1;">
+        <span class="badge ${typeColor[a.type]||'bnew'}">${a.type}</span>
+        <div class="a-date">${new Date(a.time).toLocaleDateString('ta-IN')}</div>
+        <div class="a-title">${a.title}</div>
+        <div class="a-desc">${a.desc||''}</div>
+      </div>
+      <button class="a-del" onclick="deleteAnn('${a.id}')">🗑</button>
+    </div>`).join('');
+};
+
+window.renderGallery = function() {
+  const el = document.getElementById('galleryList');
+  if (!el) return;
+  const list = window._gallery;
+  if (!list.length) {
+    el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mu);font-family:\'Noto Serif Tamil\',serif;font-size:.85rem;">📷 Admin login → படங்கள் சேர்க்கவும்</div>';
+    return;
+  }
+  el.innerHTML = list.map(g => `
+    <div class="gitem">
+      <img src="${g.url}" alt="${g.caption}" loading="lazy">
+      <div class="glbl">${g.caption}</div>
+      <button class="gdel" onclick="deleteGalleryItem('${g.id}','${g.path||''}')">🗑</button>
+    </div>`).join('');
+};
+
+window.renderLeaders = function() {
+  const el = document.getElementById('leaderList');
+  if (!el) return;
+  const list = [...window._leaders].sort((a,b) => (a.order||0)-(b.order||0));
+  el.innerHTML = list.map(l => `
+    <div class="lcard">
+      <div class="lphoto" onclick="adminEditLeader('${l.id}')">
+        ${l.photo ? `<img src="${l.photo}" alt="${l.name}">` : '👤'}
+      </div>
+      <div class="lname">${l.name||'பெயர் சேர்க்கவும்'}</div>
+      <div class="lrole">${l.role}</div>
+      <div class="lphone">${l.phone ? '📞 '+l.phone : ''}</div>
+      <button class="ledit" onclick="adminEditLeader('${l.id}')">✏️ திருத்து</button>
+    </div>`).join('');
+  // Populate leader select
+  const sel = document.getElementById('leaderSelect');
+  if (sel) {
+    sel.innerHTML = '<option value="">-- தேர்வு செய்யுங்கள் --</option>' +
+      list.map(l => `<option value="${l.id}">${l.role} — ${l.name}</option>`).join('');
+  }
+};
+
+window.renderFacilities = function() {
+  const el = document.getElementById('facilityList');
+  const editEl = document.getElementById('facilityEditList');
+  if (!el) return;
+  const list = window._facilities;
+  const statusLabel = { yes: '<span class="fyes">✅ கிடைக்கிறது</span>', partial: '<span class="fpart">⚠️ பகுதியளவு</span>', no: '<span class="fno">❌ இல்லை</span>' };
+  el.innerHTML = list.map(f => `
+    <div class="fcard">
+      <div class="fi">${f.icon}</div>
+      <div class="fn">${f.name}</div>
+      ${statusLabel[f.status]||statusLabel.partial}
+      <button class="fedit" onclick="show('admin')">✏️</button>
+    </div>`).join('');
+  if (editEl) {
+    editEl.innerHTML = list.map(f => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #f0f0f0;">
+        <div style="font-size:.88rem;font-family:'Noto Serif Tamil',serif;">${f.icon} ${f.name}</div>
+        <select id="fstatus_${f.id}" style="border:1.5px solid #dde4e0;border-radius:8px;padding:.35rem .6rem;font-size:.8rem;outline:none;color:var(--tx);background:#fff;">
+          <option value="yes" ${f.status==='yes'?'selected':''}>✅ கிடைக்கிறது</option>
+          <option value="partial" ${f.status==='partial'?'selected':''}>⚠️ பகுதியளவு</option>
+          <option value="no" ${f.status==='no'?'selected':''}>❌ இல்லை</option>
+        </select>
+      </div>`).join('');
+  }
+};
+
+// ══ NAVIGATION ══
+window.show = function(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.dnav button, .bnav button, .desktop-nav button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    const idx = ['home','news','collector','hospital','facilities'].indexOf(id);
+    if (idx >= 0) document.querySelectorAll('.bnav button')[idx]?.classList.add('active');
+  }
+  // sync desktop nav
+  document.querySelectorAll('.desktop-nav button').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`)) b.classList.add('active');
+  });
+  window.scrollTo(0, 0);
+  if (id === 'admin' && document.getElementById('adminUnlocked').style.display !== 'none') {
+    renderRequests();
+    renderFacilities();
+  }
+}
+
+window.toggleDrawer = function() {
+  document.getElementById('drawer').classList.toggle('open');
+  document.getElementById('ov').classList.toggle('show');
+  document.getElementById('hbgBtn').classList.toggle('open');
+}
+window.closeDrawer = function() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('ov').classList.remove('show');
+  document.getElementById('hbgBtn').classList.remove('open');
+}
+
+// ══ ADMIN FUNCTIONS ══
+window.np = function(el, nextId) { if (el.value && nextId) document.getElementById(nextId).focus(); }
+window.pk = function(e, el, prevId, nextId) { if (e.key === 'Backspace' && !el.value && prevId) document.getElementById(prevId).focus(); }
+window.cp = function() {
+  const pin = ['p1','p2','p3','p4'].map(id => document.getElementById(id).value).join('');
+  if (pin.length === 4) {
+    if (pin === ADMIN_PIN) {
+      document.getElementById('adminLocked').style.display = 'none';
+      document.getElementById('adminUnlocked').style.display = 'block';
+      document.getElementById('pinErr').style.display = 'none';
+      renderRequests();
+      renderFacilities();
+      renderMarqueeEdit();
+    } else {
+      document.getElementById('pinErr').style.display = 'block';
+      ['p1','p2','p3','p4'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('p1').focus();
+    }
+  }
+}
+
+window.adminLogout = function() {
+  document.getElementById('adminLocked').style.display = 'block';
+  document.getElementById('adminUnlocked').style.display = 'none';
+  ['p1','p2','p3','p4'].forEach(id => document.getElementById(id).value = '');
+  try { localStorage.removeItem('vill_auth'); localStorage.removeItem('vill_time'); } catch {}
+  document.getElementById('appMain').style.display = 'none';
+  document.getElementById('appLogin').style.display = 'block';
+  document.getElementById('mobileInp').value = '';
+  document.getElementById('phoneBox').style.borderColor = '#e0e8e3';
+  document.getElementById('phoneOk').style.display = 'none';
+  document.getElementById('err1').style.display = 'none';
+  document.getElementById('lstep2').classList.remove('active');
+  document.getElementById('lstep1').classList.add('active');
+  document.body.classList.remove('admin-mode');
+}
+
+// ══ ADD ANNOUNCEMENT ══
+window.addAnnouncement = async function() {
+  const title = document.getElementById('annTitle').value.trim();
+  const desc = document.getElementById('annDesc').value.trim();
+  const type = document.getElementById('annType').value;
+  if (!title || !desc) { alert('தலைப்பு மற்றும் விளக்கம் கட்டாயம்!'); return; }
+  if (typeof fbAddAnnouncement === 'function') {
+    await fbAddAnnouncement({ title, desc, type });
+  } else {
+    window._announcements.unshift({ id: Date.now().toString(), title, desc, type, time: Date.now() });
+    renderAnnouncements();
+  }
+  document.getElementById('annTitle').value = '';
+  document.getElementById('annDesc').value = '';
+  const s = document.getElementById('annSuccess');
+  s.style.display = 'block';
+  setTimeout(() => s.style.display = 'none', 3000);
+}
+
+// ══ DELETE ANNOUNCEMENT ══
+window.deleteAnn = async function(id) {
+  if (!confirm('இந்த அறிவிப்பை நீக்கவா?')) return;
+  if (typeof fbDeleteAnnouncement === 'function') {
+    await fbDeleteAnnouncement(id);
+  } else {
+    window._announcements = window._announcements.filter(a => a.id !== id);
+    renderAnnouncements();
+  }
+}
+
+// ══ UPLOAD IMAGE ══
+window.previewImg = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('imgPreview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+}
+
+window.uploadImage = async function() {
+  const file = document.getElementById('imgFile').files[0];
+  const caption = document.getElementById('imgCaption').value.trim();
+  if (!file || !caption) { alert('படம் மற்றும் தலைப்பு கட்டாயம்!'); return; }
+  document.getElementById('uploadProgress').style.display = 'block';
+  document.getElementById('uploadBtn').disabled = true;
+  try {
+    if (typeof fbUploadImage === 'function') {
+      await fbUploadImage(file, caption);
+    } else {
+      // Fallback: base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        window._gallery.unshift({ id: Date.now().toString(), url: e.target.result, caption, time: Date.now() });
+        renderGallery();
+      };
+      reader.readAsDataURL(file);
+    }
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('uploadBtn').disabled = false;
+    document.getElementById('imgFile').value = '';
+    document.getElementById('imgCaption').value = '';
+    document.getElementById('imgPreview').style.display = 'none';
+    const s = document.getElementById('uploadSuccess');
+    s.style.display = 'block';
+    setTimeout(() => s.style.display = 'none', 3000);
+  } catch (err) {
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('uploadBtn').disabled = false;
+    alert('Upload பிழை: Firebase config சரிபார்க்கவும்!\n' + err.message);
+  }
+}
+
+// ══ DELETE GALLERY ══
+window.deleteGalleryItem = async function(id, path) {
+  if (!confirm('இந்த படத்தை நீக்கவா?')) return;
+  if (typeof fbDeleteGallery === 'function') {
+    await fbDeleteGallery(id, path);
+  } else {
+    window._gallery = window._gallery.filter(g => g.id !== id);
+    renderGallery();
+  }
+}
+
+// ══ LEADER EDIT ══
+window.loadLeaderEdit = function() {
+  const id = document.getElementById('leaderSelect').value;
+  const form = document.getElementById('leaderEditForm');
+  if (!id) { form.style.display = 'none'; return; }
+  const l = window._leaders.find(x => x.id === id);
+  if (!l) return;
+  document.getElementById('leaderName').value = l.name || '';
+  document.getElementById('leaderPhone').value = l.phone || '';
+  const preview = document.getElementById('leaderPhotoPreview');
+  if (l.photo) { preview.src = l.photo; preview.style.display = 'block'; }
+  else preview.style.display = 'none';
+  form.style.display = 'block';
+}
+
+window.previewLeaderPhoto = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('leaderPhotoPreview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+}
+
+window.saveLeader = async function() {
+  const id = document.getElementById('leaderSelect').value;
+  if (!id) return;
+  const name = document.getElementById('leaderName').value.trim();
+  const phone = document.getElementById('leaderPhone').value.trim();
+  const photoFile = document.getElementById('leaderPhoto').files[0];
+  let photoUrl = window._leaders.find(x => x.id === id)?.photo || '';
+  if (photoFile) {
+    if (typeof fbUploadLeaderPhoto === 'function') {
+      photoUrl = await fbUploadLeaderPhoto(photoFile, id);
+    } else {
+      photoUrl = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(photoFile); });
+    }
+  }
+  const data = { name, phone, photo: photoUrl };
+  if (typeof fbUpdateLeader === 'function') {
+    await fbUpdateLeader(id, data);
+  } else {
+    const idx = window._leaders.findIndex(x => x.id === id);
+    if (idx >= 0) { window._leaders[idx] = { ...window._leaders[idx], ...data }; renderLeaders(); }
+  }
+  const s = document.getElementById('leaderSuccess');
+  s.style.display = 'block';
+  setTimeout(() => s.style.display = 'none', 3000);
+}
+
+// ══ FACILITY SAVE ══
+window.saveFacilities = async function() {
+  for (const f of window._facilities) {
+    const sel = document.getElementById('fstatus_' + f.id);
+    if (sel) {
+      const status = sel.value;
+      if (typeof fbUpdateFacility === 'function') {
+        await fbUpdateFacility(f.id, { ...f, status });
+      } else {
+        f.status = status;
+      }
+    }
+  }
+  if (!window._fb) renderFacilities();
+  const s = document.getElementById('facSuccess');
+  s.style.display = 'block';
+  setTimeout(() => s.style.display = 'none', 3000);
+}
+
+// ══ REQUESTS ══
+function getReqs() { try { return JSON.parse(localStorage.getItem('village_reqs') || '[]'); } catch { return []; } }
+function saveReqs(r) { try { localStorage.setItem('village_reqs', JSON.stringify(r)); } catch {} }
+
+window.updateBadge = function() {
+  const n = getReqs().length;
+  ['notifCount','drawerCount','adminReqCount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = n > 0 ? (id === 'notifCount' ? 'flex' : 'inline-block') : 'none'; el.textContent = n; }
+  });
+}
+
+window.selType = function(el, val) {
+  document.querySelectorAll('.rtype').forEach(r => r.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('selReqType').value = val;
+}
+
+window.submitReq = async function() {
+  const name = document.getElementById('rName').value.trim();
+  const msg  = document.getElementById('rMsg').value.trim();
+  const phone = document.getElementById('rPhone').value.trim();
+  const type  = document.getElementById('selReqType').value;
+  if (!name || !msg) { alert('பெயர் மற்றும் விளக்கம் கட்டாயம்!'); return; }
+
+  const btn = document.querySelector('#contact .sbtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ அனுப்புகிறது...';
+
+  // Save locally
+  const req = { id: Date.now(), type, name, phone, msg, time: new Date().toLocaleString('ta-IN') };
+  const reqs = getReqs(); reqs.unshift(req); saveReqs(reqs);
+  updateBadge();
+
+  // Send email via Formspree (இலவசம் — 50 emails/month)
+  const sendEmail = async () => {
+    if (FORMSPREE_ID === 'YOUR_FORM_ID') return 'no_config';
+    try {
+      const res = await fetch('https://formspree.io/f/' + FORMSPREE_ID, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          phone: phone || 'தரவில்லை',
+          type: type,
+          message: msg,
+          time: req.time,
+          _subject: 'புதிய கோரிக்கை — ' + type + ' — ' + name
+        })
+      });
+      const data = await res.json();
+      if (res.ok) { console.log('Formspree OK'); return 'ok'; }
+      else { console.error('Formspree error:', data); return 'err'; }
+    } catch(e) { console.error('Formspree fetch error:', e); return 'err'; }
+  };
+  const result = await sendEmail();
+
+  btn.disabled = false;
+  btn.textContent = '📨 கோரிக்கை அனுப்பு';
+  document.getElementById('rName').value = '';
+  document.getElementById('rPhone').value = '';
+  document.getElementById('rMsg').value = '';
+  const s = document.getElementById('successMsg');
+  const es = document.getElementById('emailStatus');
+  if (es) es.textContent = result === 'ok' ? '📧 Email அனுப்பப்பட்டது!' : '';
+  s.style.display = 'block';
+  setTimeout(() => { s.style.display = 'none'; }, 5000);
+}
+
+window.renderRequests = function() {
+  const reqs = getReqs();
+  const el = document.getElementById('reqList');
+  if (!el) return;
+  updateBadge();
+  if (!reqs.length) { el.innerHTML = '<div class="no-req">📭 கோரிக்கைகள் இல்லை</div>'; return; }
+  const colors = { 'செய்தி புதுப்பிப்பு': '#e8f0fb;color:#1565c0', 'படம் சேர்க்க': '#e8f5ee;color:#1a6b3c', 'வசதி மாற்றம்': '#fdf3dc;color:#c8870a', 'பொது கோரிக்கை': '#f5f0ff;color:#5c35b5' };
+  el.innerHTML = reqs.map(r => `
+    <div class="req-item">
+      <div class="ri-type" style="background:${colors[r.type]||'#f0f0f0;color:#333'};">${r.type}</div>
+      <div class="ri-name">👤 ${r.name} ${r.phone ? '· 📞 ' + r.phone : ''}</div>
+      <div class="ri-msg">${r.msg}</div>
+      <div class="ri-meta">🕐 ${r.time}</div>
+      <button class="ri-del" onclick="delReq(${r.id})">✓ முடிந்தது</button>
+    </div>`).join('');
+}
+
+window.delReq = function(id) {
+  saveReqs(getReqs().filter(r => r.id !== id));
+  renderRequests();
+  updateBadge();
+}
+
+window.adminEditLeader = function(id) {
+  document.getElementById('leaderSelect').value = id;
+  loadLeaderEdit();
+  show('admin');
+  document.getElementById('adminLocked').style.display = 'none';
+  document.getElementById('adminUnlocked').style.display = 'block';
+}
+
+window.closeModal = function(id) { document.getElementById(id).classList.remove('show'); }
+
+// ══ INIT ══
+checkAutoLogin();
+updateBadge();
+</script>
+</body>
+</html>
