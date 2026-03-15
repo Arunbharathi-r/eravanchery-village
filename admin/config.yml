@@ -1,1 +1,94 @@
-backend: name: git-gateway branch: main media_folder: images public_folder: /images collections: - name: announcements label: அறிவிப்புகள் folder: _announcements create: true fields: - {label: தலைப்பு, name: title, widget: string} - {label: விளக்கம், name: body, widget: text} - {label: வகை, name: type, widget: select, options: [புதியது, அறிவிப்பு, நிகழ்வு]} - {label: தேதி, name: date, widget: date} - name: gallery label: படங்கள் folder: _gallery create: true fields: - {label: தலைப்பு, name: title, widget: string} - {label: படம், name: image, widget: image}
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: images
+public_folder: /images
+
+collections:
+  - name: "announcements"
+    label: "அறிவிப்புகள்"
+    folder: "_data/announcements"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - label: "தலைப்பு"
+        name: "title"
+        widget: "string"
+      - label: "விளக்கம்"
+        name: "body"
+        widget: "text"
+      - label: "வகை"
+        name: "type"
+        widget: "select"
+        options:
+          - "புதியது"
+          - "அறிவிப்பு"
+          - "நிகழ்வு"
+          - "அவசரம்"
+      - label: "தேதி"
+        name: "date"
+        widget: "datetime"
+
+  - name: "gallery"
+    label: "படங்கள்"
+    folder: "_data/gallery"
+    create: true
+    fields:
+      - label: "தலைப்பு"
+        name: "title"
+        widget: "string"
+      - label: "படம்"
+        name: "image"
+        widget: "image"
+      - label: "விளக்கம்"
+        name: "caption"
+        widget: "string"
+        required: false
+
+  - name: "leaders"
+    label: "தலைவர்கள்"
+    folder: "_data/leaders"
+    create: true
+    fields:
+      - label: "பெயர்"
+        name: "name"
+        widget: "string"
+      - label: "பதவி"
+        name: "role"
+        widget: "string"
+      - label: "தொலைபேசி"
+        name: "phone"
+        widget: "string"
+      - label: "புகைப்படம்"
+        name: "photo"
+        widget: "image"
+        required: false
+
+  - name: "facilities"
+    label: "வசதிகள்"
+    folder: "_data/facilities"
+    create: true
+    fields:
+      - label: "வசதி பெயர்"
+        name: "name"
+        widget: "string"
+      - label: "Icon"
+        name: "icon"
+        widget: "string"
+      - label: "நிலை"
+        name: "status"
+        widget: "select"
+        options:
+          - "yes"
+          - "partial"
+          - "no"
+
+  - name: "marquee"
+    label: "Marquee செய்திகள்"
+    folder: "_data/marquee"
+    create: true
+    fields:
+      - label: "செய்தி உரை"
+        name: "text"
+        widget: "string"
