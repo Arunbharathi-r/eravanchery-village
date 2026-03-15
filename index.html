@@ -400,7 +400,7 @@ section{scroll-margin-top:96px;}
 
 /* ── FLOATING BUTTONS ── */
 .float-btns{position:fixed;bottom:85px;right:16px;display:flex;flex-direction:column;gap:10px;z-index:199;}
-.float-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:transform .2s;}
+.float-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:transform .2s;position:relative;}
 .float-btn:hover{transform:scale(1.12);}
 .float-call{background:#1a6b3c;}
 .float-label{position:absolute;right:60px;background:rgba(0,0,0,.72);color:#fff;padding:.25rem .65rem;border-radius:6px;font-size:.7rem;white-space:nowrap;font-family:'Noto Serif Tamil',serif;pointer-events:none;opacity:0;transition:opacity .2s;}
@@ -421,7 +421,7 @@ section{scroll-margin-top:96px;}
 
 @media(min-width:768px){
   .igrid{grid-template-columns:repeat(4,1fr);}
-  .qgrid{grid-template-columns:repeat(6,1fr);}
+  .qgrid{grid-template-columns:repeat(3,1fr);}
   .fgrid{grid-template-columns:repeat(4,1fr);}
   .ggrid{grid-template-columns:repeat(3,1fr);}
   .lgrid{grid-template-columns:repeat(3,1fr);}
@@ -745,6 +745,9 @@ section{scroll-margin-top:96px;}
       <div class="qbtn" onclick="show('leaders')"><span class="qi">👤</span><span class="ql">தலைவர்கள்</span><span class="qa">தொடர்பு எண்</span></div>
       <div class="qbtn" onclick="show('facilities')"><span class="qi">🏗️</span><span class="ql">வசதிகள்</span><span class="qa">புகார் எண்கள்</span></div>
       <div class="qbtn" onclick="show('contact')"><span class="qi">📩</span><span class="ql">கோரிக்கை</span><span class="qa">நிர்வாகியிடம்</span></div>
+      <div class="qbtn" onclick="openGroup()" style="border-color:#25D366;"><span class="qi">💬</span><span class="ql" style="color:#25D366;">WhatsApp</span><span class="qa" style="color:#25D366;">Group சேர</span></div>
+      <div class="qbtn" onclick="openCall()" style="border-color:var(--g);"><span class="qi">📞</span><span class="ql">அழைக்க</span><span class="qa">நேரடி தொடர்பு</span></div>
+      <div class="qbtn" onclick="show('gallery')"><span class="qi">🖼</span><span class="ql">படங்கள்</span><span class="qa">கிராம காட்சிகள்</span></div>
     </div>
     <div class="igrid">
       <div class="iitem"><div class="il">கிராமம்</div><div class="iv">எரவாஞ்சேரி (54)</div></div>
@@ -775,7 +778,7 @@ section{scroll-margin-top:96px;}
     <div class="sec-hd">கிராம வரலாறு</div>
     <div class="sec-sub">நம் கிராமத்தின் பெருமை</div>
     <div class="divider"></div>
-    <div class="card card-g"><h3>எரவாஞ்சேரி பற்றி</h3><p>எரவாஞ்சேரி (54) என்பது தமிழ்நாட்டின் மயிலாடுதுறை மாவட்டம், தரங்கம்பாடி வட்டத்தில் அமைந்த வளமான விவசாய கிராமம். மேலக்காலனி மற்றும் கீழக்காலனி என்று இரண்டு பிரிவுகளாக அமைந்துள்ளது.</p></div>
+    <div class="card card-g"><h3>எரவாஞ்சேரி பற்றி</h3><p>எரவாஞ்சேரி (54) என்பது தமிழ்நாட்டின் மயிலாடுதுறை மாவட்டம், தரங்கம்பாடி வட்டத்தில் அமைந்த வளமான விவசாய கிராமம்.</p></div>
     <div class="card card-g"><h3>விவசாயம்</h3><p>நெல், கரும்பு மற்றும் வாழை ஆகியவை முக்கிய பயிர்கள். காவிரி டெல்டா வளமான மண்ணில் பல தலைமுறைகளாக விவசாயம் செய்கின்றனர்.</p></div>
     <div class="card card-g"><h3>கோயில்கள் மற்றும் கலாச்சாரம்</h3><p>தொன்மையான கோயில்கள் சமூகத்தின் ஆன்மீக மையம். பொங்கல், தை பூசம் விழாக்கள் சிறப்பாக கொண்டாடப்படுகின்றன. சிறு கிரிக்கெட் போட்டிகளும் நடைபெறுகின்றன.</p></div>
   </div>
@@ -1098,6 +1101,22 @@ section{scroll-margin-top:96px;}
 </section>
 
 
+<!-- ════ FLOATING STICKY BUTTONS ════ -->
+<div class="float-btns" id="floatBtns">
+  <div style="position:relative;">
+    <button class="float-btn" style="background:#25D366;" onclick="openGroup()" title="WhatsApp Group">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <span class="float-label">கிராம Group</span>
+    </button>
+  </div>
+  <div style="position:relative;">
+    <button class="float-btn float-call" onclick="openCall()" title="அழைக்கவும்">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+      <span class="float-label">அழைக்கவும்</span>
+    </button>
+  </div>
+</div>
+
 <!-- ════ FOOTER ════ -->
 <footer>
   <strong>54 எரவாஞ்சேரி கிராமம்</strong><br>
@@ -1223,10 +1242,29 @@ window.showHowto = function() {
 const ADMIN_MOBILE = '9999999999';
 const ADMIN_PIN = '1234';
 let currentOTP = '', cdInterval = null;
-window._announcements = [];
+
+// Default data — உடனே காட்டும், GitHub fetch-க்கு காத்திருக்காது
+window._announcements = [
+  { id: '0', title: 'எரவாஞ்சேரி மெயின் ரோடு தோப்புத்தெரு சிமெண்ட் சாலை பணிகள் நிறைவு கோரிக்கை', desc: 'மெயின் ரோடு தோப்புத்தெருவில் சிமெண்ட் சாலை பணிகள் பாதியில் நிறுத்தப்பட்டுள்ளன. பொதுமக்கள் கடும் சிரமம் அனுபவிக்கின்றனர். உடனடியாக பணிகள் நிறைவு செய்ய வேண்டும்.\n— அருண்பாரதி R, மக்கள் பிரதிநிதி | 15.03.2026', type: 'கோரிக்கை', time: Date.now() },
+  { id: '1', title: '54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை', desc: 'கிராம சபை கூட்டத்தில் தீர்மானம் நிறைவேற்றப்பட்டது.', type: 'புதியது', time: Date.now() - 86400000 },
+  { id: '2', title: 'பிரதம மந்திரி கிசான் திட்டம் பதிவு', desc: 'தகுதியான விவசாயிகள் விவசாய அலுவலகத்தில் பதிவு செய்யலாம்.', type: 'அறிவிப்பு', time: Date.now() - 172800000 },
+];
 window._gallery = [];
-window._leaders = [];
-window._facilities = [];
+window._leaders = [
+  { id: '1', role: 'கிராம தலைவர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 1 },
+  { id: '2', role: 'வார்டு உறுப்பினர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 2 },
+  { id: '3', role: 'பஞ்சாயத்து அலுவலர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 3 },
+];
+window._facilities = [
+  { id: '1', name: 'குடிநீர்', icon: '💧', status: 'yes' },
+  { id: '2', name: 'மின்சாரம்', icon: '⚡', status: 'yes' },
+  { id: '3', name: 'தார் சாலை', icon: '🛣️', status: 'partial' },
+  { id: '4', name: 'பேருந்து வசதி', icon: '🚌', status: 'no' },
+  { id: '5', name: 'பள்ளி', icon: '🏫', status: 'yes' },
+  { id: '6', name: 'இணையம்', icon: '🌐', status: 'partial' },
+  { id: '7', name: 'வங்கி / ATM', icon: '🏦', status: 'partial' },
+  { id: '8', name: 'சாக்கடை', icon: '🚰', status: 'no' },
+];
 
 window.onPhoneInput = function() {
   const v = document.getElementById('mobileInp').value;
@@ -1323,9 +1361,12 @@ window.launchApp = function(isAdmin) {
   if (typeof startFirebaseListeners === 'function') {
     startFirebaseListeners();
     if (typeof fbSeedDefaults === 'function') fbSeedDefaults();
-  } else {
-    loadFallbackData();
   }
+  // Data already pre-loaded on page init — no need to reload
+  renderAnnouncements();
+  renderLeaders();
+  renderFacilities();
+  renderGallery();
   updateBadge();
 }
 
@@ -1356,26 +1397,15 @@ const GITHUB_BRANCH = 'main';
 const GITHUB_RAW = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents`;
 
+
 // ══ Load data from GitHub ══
 async function loadFallbackData() {
-  // Load gallery from GitHub
-  await loadGithubGallery();
-  await loadGithubAnnouncements();
-
-  // Default fallback data
-  if (!window._announcements.length) {
-    window._announcements = [
-      {
-        id: '0',
-        title: 'எரவாஞ்சேரி – மெயின் ரோடு தோப்புத்தெரு சிமெண்ட் சாலை பணிகள் நிறைவு கோரிக்கை',
-        desc: 'மயிலாடுதுறை மாவட்டம், தரங்கம்பாடி வட்டம், எரவாஞ்சேரி கிராமத்தில் மெயின் ரோடு தோப்புத்தெருவில் சிமெண்ட் சாலை அமைக்கும் பணிகள் பாதியில் நிறுத்தப்பட்டுள்ளன. இதனால் பொதுமக்கள், பள்ளி மாணவர்கள், முதியவர்கள் கடும் சிரமம் அனுபவிக்கின்றனர். பணிகளை உடனடியாக நிறைவு செய்ய வேண்டும் என கோரிக்கை விடுக்கப்பட்டுள்ளது.\n\n— அருண்பாரதி R, மக்கள் பிரதிநிதி | 15.03.2026',
-        type: 'கோரிக்கை',
-        time: Date.now()
-      },
-      { id: '1', title: '54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை', desc: 'கிராம சபை கூட்டத்தில் தீர்மானம் நிறைவேற்றப்பட்டது.', type: 'புதியது', time: Date.now() - 86400000 },
-      { id: '2', title: 'பிரதம மந்திரி கிசான் திட்டம் பதிவு', desc: 'தகுதியான விவசாயிகள் பதிவு செய்யலாம்.', type: 'அறிவிப்பு', time: Date.now() - 86400000 },
-    ];
-  }
+  // 1. Show default data immediately — no blank screen
+  window._announcements = [
+    { id: '0', title: 'எரவாஞ்சேரி மெயின் ரோடு தோப்புத்தெரு சிமெண்ட் சாலை பணிகள் நிறைவு கோரிக்கை', desc: 'மெயின் ரோடு தோப்புத்தெருவில் சிமெண்ட் சாலை பணிகள் பாதியில் நிறுத்தப்பட்டுள்ளன. பொதுமக்கள் கடும் சிரமம் அனுபவிக்கின்றனர். உடனடியாக பணிகள் நிறைவு செய்ய வேண்டும்.\n\n— அருண்பாரதி R, மக்கள் பிரதிநிதி | 15.03.2026', type: 'கோரிக்கை', time: Date.now() },
+    { id: '1', title: '54 எரவாஞ்சேரி மேலக்காலனி & கீழக்காலனி பெயர் மாற்றம் கோரிக்கை', desc: 'கிராம சபை கூட்டத்தில் தீர்மானம் நிறைவேற்றப்பட்டது.', type: 'புதியது', time: Date.now() - 86400000 },
+    { id: '2', title: 'பிரதம மந்திரி கிசான் திட்டம் பதிவு', desc: 'தகுதியான விவசாயிகள் பதிவு செய்யலாம்.', type: 'அறிவிப்பு', time: Date.now() - 172800000 },
+  ];
   window._leaders = [
     { id: '1', role: 'கிராம தலைவர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 1 },
     { id: '2', role: 'வார்டு உறுப்பினர்', name: 'பெயர் சேர்க்கவும்', phone: '', photo: '', order: 2 },
@@ -1391,10 +1421,22 @@ async function loadFallbackData() {
     { id: '7', name: 'வங்கி / ATM', icon: '🏦', status: 'partial' },
     { id: '8', name: 'சாக்கடை', icon: '🚰', status: 'no' },
   ];
+  window._gallery = [];
+
+  // 2. Render immediately with default data
   renderAnnouncements();
   renderLeaders();
   renderFacilities();
   renderGallery();
+
+  // 3. Fetch GitHub data in background — update when ready
+  Promise.all([loadGithubGallery(), loadGithubAnnouncements()])
+    .then(() => {
+      renderAnnouncements();
+      renderGallery();
+      renderLeaders();
+    })
+    .catch(e => console.warn('GitHub fetch error:', e));
 }
 
 // ── Fetch gallery from GitHub _data/gallery folder ──
@@ -1403,7 +1445,7 @@ async function loadGithubGallery() {
     const res = await fetch(`${GITHUB_API}/_data/gallery?ref=${GITHUB_BRANCH}`, {
       headers: { 'Accept': 'application/vnd.github.v3+json' }
     });
-    if (!res.ok) { window._gallery = []; return; }
+    if (!res.ok) { return; } // keep default data
     const files = await res.json();
     const mdFiles = files.filter(f => f.name.endsWith('.md') || f.name.endsWith('.json'));
     const items = [];
@@ -1432,10 +1474,7 @@ async function loadGithubGallery() {
     }
     window._gallery = items;
     console.log(`Gallery: ${items.length} images loaded from GitHub`);
-  } catch(e) {
-    console.warn('Gallery fetch error:', e);
-    window._gallery = [];
-  }
+  } catch(e) { console.warn('Gallery fetch error:', e); } // keep default data
 }
 
 // ── Fetch announcements from GitHub _data/announcements folder ──
@@ -1444,7 +1483,7 @@ async function loadGithubAnnouncements() {
     const res = await fetch(`${GITHUB_API}/_data/announcements?ref=${GITHUB_BRANCH}`, {
       headers: { 'Accept': 'application/vnd.github.v3+json' }
     });
-    if (!res.ok) { window._announcements = []; return; }
+    if (!res.ok) { return; } // keep default data
     const files = await res.json();
     const mdFiles = files.filter(f => f.name.endsWith('.md'));
     const items = [];
@@ -1468,10 +1507,7 @@ async function loadGithubAnnouncements() {
     }
     window._announcements = items;
     console.log(`Announcements: ${items.length} loaded from GitHub`);
-  } catch(e) {
-    console.warn('Announcements fetch error:', e);
-    window._announcements = [];
-  }
+  } catch(e) { console.warn('Announcements fetch error:', e); } // keep default data
 }
 
 // ══ RENDER FUNCTIONS ══
@@ -1948,6 +1984,8 @@ window.addEventListener('scroll', () => {
 // ══ INIT ══
 checkAutoLogin();
 updateBadge();
+// Pre-load data immediately — login-க்கு காத்திருக்காமல்
+loadFallbackData();
 </script>
 
 <!-- Netlify Identity Widget — handles recovery/invite tokens -->
