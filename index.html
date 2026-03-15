@@ -1118,6 +1118,14 @@ window.launchApp = function(isAdmin) {
 }
 
 window.checkAutoLogin = function() {
+  // Skip auto-login if recovery/invite token present
+  if (window.location.hash && (
+    window.location.hash.includes('recovery_token') ||
+    window.location.hash.includes('invite_token') ||
+    window.location.hash.includes('confirmation_token'))) {
+    window.location.href = '/admin/' + window.location.hash;
+    return;
+  }
   try {
     const a = localStorage.getItem('vill_auth');
     const t = parseInt(localStorage.getItem('vill_time') || '0');
@@ -1581,12 +1589,7 @@ if (window.netlifyIdentity) {
     }
   });
 }
-// Handle recovery token — redirect to admin
-if (window.location.hash.includes('recovery_token') ||
-    window.location.hash.includes('invite_token') ||
-    window.location.hash.includes('confirmation_token')) {
-  window.location.href = '/admin/' + window.location.hash;
-}
+// Token handling moved to checkAutoLogin
 </script>
 </body>
 </html>
